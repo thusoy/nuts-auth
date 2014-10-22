@@ -1,4 +1,4 @@
 dtls-experiments
 ================
 
-Experiments for my project on DTLS sockets with NULL encryption over radio interfaces.
+Experiments for my project on authenticating a radio uplink to the NUTS cubesat.
