@@ -1,0 +1,52 @@
+hashfunction MAC, KDF;
+usertype SecurityAssociation, Command, Reply;
+const SAprop, SA: SecurityAssociation;
+const CMD, ACK: Command;
+macro Ks = KDF(k(I, R), Ra, Rb);
+
+protocol NUTSAuth (I,R) {
+
+
+    role I {
+        var Ra: Nonce;
+        fresh Rb: Nonce;
+
+        # Key exchange and mutual authentication
+        send_1(I, R, Rb, MAC(k(I, R), R, I, Rb));
+        recv_2(R, I, Ra, MAC(k(I, R), R, I, Rb, Ra));
+        send_3(I, R, SAprop, MAC(k(I, R), R, I, Ra, SAprop));
+        recv_4(R, I, SA, MAC(k(I, R), R, I, Ra, Rb, SA));
+
+
+        # Send command
+        send_5(I, R, CMD, MAC(Ks, CMD));
+
+        claim(I, Alive); # What does this do?
+        claim(I, Secret, Ks);
+        claim(I, Weakagree); # What does this do?
+        claim(I, Niagree);
+        claim(I, Nisynch);
+        claim(I, Commit, R, Ks);
+    };
+
+    role R {
+        fresh Ra: Nonce;
+        var Rb: Nonce;
+
+        # Key exchange and mutual authentication
+        recv_1(I, R, Rb, MAC(k(I, R), R, I, Rb));
+        send_2(R, I, Ra, MAC(k(I, R), R, I, Rb, Ra));
+        recv_3(I, R, SAprop, MAC(k(I, R), R, I, Ra, SAprop));
+        send_4(R, I, SA, MAC(k(I, R), R, I, Ra, Rb, SA));
+
+        # Receive command
+        recv_5(I, R, CMD, MAC(Ks, CMD));
+
+        claim(R, Alive); # What does this do?
+        claim(R, Secret, Ks);
+        claim(R, Weakagree); # What does this do?
+        claim(R, Niagree);
+        claim(R, Nisynch);
+        claim(R, Commit, I, Ks); # Why does this cause failure?
+    };
+}
