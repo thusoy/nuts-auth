@@ -20,13 +20,14 @@ protocol NUTSAuth (I,R) {
 
         # Send command
         send_5(I, R, CMD, MAC(Ks, CMD));
+        recv_6(R, I, ACK, MAC(Ks, ACK));
 
         claim(I, Alive); # What does this do?
         claim(I, Secret, Ks);
         claim(I, Weakagree); # What does this do?
         claim(I, Niagree);
         claim(I, Nisynch);
-        claim(I, Commit, R, Ks);
+        claim(I, Commit, R, Ks); # Why does this fail?
     };
 
     role R {
@@ -41,6 +42,7 @@ protocol NUTSAuth (I,R) {
 
         # Receive command
         recv_5(I, R, CMD, MAC(Ks, CMD));
+        send_6(R, I, ACK, MAC(Ks, ACK));
 
         claim(R, Alive); # What does this do?
         claim(R, Secret, Ks);
