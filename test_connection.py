@@ -1,9 +1,12 @@
 # Expected comm as follows
 
 import os
+from binascii import hexlify as hex
 import json
+from functools import partial
+import quopri
 
-from nuts import Connection, _messages, send, hkdf_expand, mac, get_mac
+from nuts import AuthChannel, _messages, send as _send, hkdf_expand, mac, get_mac, Message
 
 shared_key = '39115349d0124171cccbdd46ce24c55f98a66809bff4f73d344abf81351a9ff6'.decode('hex')
 
@@ -13,35 +16,43 @@ id_b = b'GroundStation-1'
 
 R_b = os.urandom(8)
 
-conn = Connection(id_a, id_b, R_b)
+conn = AuthChannel(id_a, shared_key)
 
-# First message from sat should be 128 bits, and should verify the identify of the sat
-assert len(_messages[0].msg) == 16
-assert _messages[0].dest == id_b
-msg = id_a + id_b + R_b
-expected_m1_digest = mac(shared_key, msg)
+print 'R_b', quopri.encodestring(R_b)
+
+
+def send(msg):
+    _send(id_b, id_a, msg)
+    conn.receive(_messages[-1])
+
+m0 = '\x00' + R_b
+m0_digest = mac(shared_key, id_a + id_b + m0)
+send(m0 + m0_digest)
+
+# First message from sat should be 128 bits + 1 byte msg type, and should verify the identify of the sat
+assert _messages[-1].msg[0] == '\x80'
+assert len(_messages[-1].msg) == 17
+assert _messages[-1].dest == id_b
+m1_mac_input = id_a + id_b + _messages[-1].msg[:-8] + R_b
+expected_m1_digest = mac(shared_key, m1_mac_input)
 
 # Message digest should be correct
-assert _messages[0].msg[8:] == expected_m1_digest
+assert _messages[-1].msg[-8:] == expected_m1_digest
 
-# Prove our knowledge of shared_key
-R_a = _messages[0].msg[:8]
-msg = id_a + id_b + R_a
-m2_digest = mac(shared_key, msg)
-
-send(id_a, m2_digest)
-conn.challenge_reply_received(_messages[-1].msg)
-session_key = hkdf_expand(shared_key + R_a + R_b, length=16)
-reply = 'Okay'
-
-# Assert both agreed on the same session key
-assert _messages[-1].msg[:8] == 'Go ahead'
-assert _messages[-1].msg[len('Go ahead'):] == mac(session_key, 'Go ahead')
+# Prove our knowledge of shared_key, and send a SA proposal
+R_a = _messages[-1].msg[1:9]
 
 sa_proposal = {
     'macs': ['sha3_512'],
     'mac_len': 8,
 }
+
+m2 = '\x01' + json.dumps(sa_proposal)
+m2_mac_input = id_a + id_b + m2 + _messages[-1].msg[:9]
+m2_digest = mac(shared_key, m2_mac_input)
+send(m2 + m2_digest)
+session_key = hkdf_expand(shared_key + R_a + R_b, length=16)
+
 
 msg = json.dumps(sa_proposal)
 
