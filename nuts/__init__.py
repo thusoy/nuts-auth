@@ -12,8 +12,6 @@ import json
 import hashlib
 import sha3
 
-MessageType = namedtuple('Message', ['byte', 'keyword', 'description'])
-
 
 # Store messages passed back and forth for inspection
 Message = namedtuple('Message', ['source', 'dest', 'msg'])
