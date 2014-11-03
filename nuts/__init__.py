@@ -19,28 +19,20 @@ MessageType = namedtuple('Message', ['byte', 'keyword', 'description'])
 Message = namedtuple('Message', ['source', 'dest', 'msg'])
 _messages = []
 
-shared_key = shared_key = '39115349d0124171cccbdd46ce24c55f98a66809bff4f73d344abf81351a9ff6'.decode('hex')
-
-
 def send(source, dest, msg):
-    print 'Sending msg of length %d to %s: 0x%s' % (len(msg), dest, quopri.encodestring(msg))
-    _messages.append( Message(source, dest, msg) )
+    print 'Sending msg of length %d to %s: %s' % (len(msg), dest, repr(quopri.encodestring(msg)))
+    msg = Message(source, dest, msg)
+    _messages.append(msg)
+    return msg
 
 
-def mac(key, msg):
+def mac(key, msg, algo='sha3_256', mac_len=8):
     """ Create a secure MAC of the message with the key, using
     Keccak (SHA-3) 512 truncated to 64 bits.
     """
-    print 'MACing 0x%s' % quopri.encodestring(msg)
-    return hashlib.sha3_256(key + msg).digest()[:8]
-
-
-def get_mac(mac_name, mac_len):
-    """ Get the MAC function agreed upon in the SA. """
-    mac_func = getattr(hashlib, mac_name)
-    def _mac(key, msg):
-        return mac_func(key + msg).digest()[:mac_len]
-    return _mac
+    print 'MACing %s with key %s (%d)' % (repr(quopri.encodestring(msg)), repr(quopri.encodestring(key)), len(key))
+    hash_func = getattr(hashlib, algo)
+    return hash_func(key + msg).digest()[:mac_len]
 
 
 class NUTSAuthException(Exception):
@@ -58,7 +50,8 @@ class AuthChannel(object):
     #: will be replied.
     version = 1
 
-    #: MACs supported by this satellite/server. Used in the SA negotiation.
+    #: MACs supported by this satellite/server. Used in the SA negotiation, should be ordered
+    #: by preference (strength).
     supported_macs = [
         'sha3_512',
         'sha3_384',
@@ -82,7 +75,11 @@ class AuthChannel(object):
         else:
             session = Session(self.id_a, message.source, self.shared_key)
             self.sessions[message.source] = session
-        return session.handle(message.msg)
+        response = session.handle(message.msg)
+        if session.terminate:
+            print 'Terminating session with %s' % message.source
+            del self.sessions[message.source]
+        return response
 
 
 class Session(object):
@@ -92,6 +89,7 @@ class Session(object):
         self.id_a = id_a
         self.id_b = id_b
         self.shared_key = shared_key
+        self.terminate = False
 
         # Setup self.handlers dict
         self.handlers = {}
@@ -121,7 +119,8 @@ class Session(object):
 
 
     def not_implemented(self, message):
-        send(self.id_a, self.id_b, messages.MESSAGE_TYPE_NOT_SUPPORTED.byte)
+        self.terminate = True
+        return self.send(messages.MESSAGE_TYPE_NOT_SUPPORTED.byte)
 
 
     def respond_to_client_hello(self, message):
@@ -132,60 +131,49 @@ class Session(object):
         self.R_b = message[:8]
 
         # Verify incoming MAC
-        expected_mac = self.mac(message[:8])
+        expected_mac = self.mac('\x00' + message[:8])
         if not constant_time_compare(expected_mac, message[8:]):
             incorrect_mac_message = messages.INVALID_MAC_FROM_CLIENT.byte
             incorrect_mac_message += self.mac(incorrect_mac_message)
-            send(self.id_a, self.id_b, incorrect_mac_message)
-            return
+            return send(self.id_a, self.id_b, incorrect_mac_message)
 
         msg = messages.SERVER_HELLO.byte + self.R_a
         h = self.mac(msg + self.R_b)
         msg = msg + h
-        send(self.id_a, self.id_b, msg)
+        return self.send(msg)
 
 
     def respond_to_invalid_mac_from_server(self, message):
         """ I seem to have sent an invalid MAC. This is weird. """
-        print 'Invalid mac sent by server, no idea what just happened'
+        raise 'Invalid mac sent by server, no idea what just happened'
+
+
+    def send(self, message):
+        return send(self.id_a, self.id_b, message)
 
 
     def mac(self, mac_input):
         """ Shortcut for `mac(self.shared_key, self.id_a, self.id_b, mac_input)."""
-        return mac(self.shared_key, self.id_a + self.id_b + mac_input)
+        mac_len = getattr(self, 'sa_mac_len', 8)
+        key = getattr(self, 'session_key', self.shared_key)
+        mac_func = getattr(self, 'sa_mac', 'sha3_256')
+        return mac(key, self.id_a + self.id_b + mac_input, algo=mac_func, mac_len=mac_len)
 
 
     def respond_to_client_terminate(self, message):
-        pass
+        self.terminate = True
+        raise NotImplemented()
 
 
     def respond_to_sa_proposal(self, message):
-        pass
-
-
-    def rng(self, num_bytes):
-        """ Read `num_bytes` from the RNG. """
-        if os.path.exists('/dev/hwrng'):
-            with open('/dev/hwrng', 'r') as hwrng:
-                return hwrng.read(num_bytes)
-        else:
-            return os.urandom(8)
-
-
-    def challenge_reply_received(self, response):
-        """ Response received from id_b, that is H_k(id_a, id_b, R_a, a). """
-        self.session_key = hkdf_expand(shared_key + self.R_a + self.R_b, length=16)
-        send(self.id_b, b'Go ahead' + mac(self.session_key, 'Go ahead'))
-
-
-    def sa_proposal_received(self, response):
-        msg, sig = response[:-8], response[-8:]
-        if not constant_time_compare(mac(self.session_key, msg), sig):
+        msg, sig = message[:-8], message[-8:]
+        if not constant_time_compare(self.mac('\x01' + msg + self.R_a), sig):
             raise SignatureException()
 
         msg_data = json.loads(msg)
         suggested_macs = set(msg_data.get('macs', []))
-        for supported_mac in Connection.supported_macs:
+        # Pick the first MAC from supported_macs that's supported by both parties
+        for supported_mac in AuthChannel.supported_macs:
             if supported_mac in suggested_macs:
                 selected_mac = supported_mac
                 break
@@ -203,19 +191,38 @@ class Session(object):
             'mac': selected_mac,
             'mac_len': suggested_mac_len,
         }
+        response_msg = '\x81' + json.dumps(response)
+        response = self.send(response_msg + self.mac(response_msg + self.R_a + self.R_b))
         self.sa_mac_len = suggested_mac_len
-        response_msg = json.dumps(response)
-        mac_func = get_mac(selected_mac, suggested_mac_len)
-        self.mac = partial(mac_func, self.session_key)
-        send(self.id_b, response_msg + self.mac(response_msg))
+        self.sa_mac = selected_mac
+
+        # Expand session key
+        self.session_key = hkdf_expand(self.shared_key + self.R_a + self.R_b, length=16)
+
+        # Initialize sequence numbers
+        self.c_seq = self.s_seq = 1
+
+        return response
+
+
+    def rng(self, num_bytes):
+        """ Read `num_bytes` from the RNG. """
+        if os.path.exists('/dev/hwrng'):
+            with open('/dev/hwrng', 'r') as hwrng:
+                return hwrng.read(num_bytes)
+        else:
+            return os.urandom(8)
 
 
     def respond_to_message_type_not_supported(self, message):
-        pass
+        raise NotImplemented()
 
 
-    def respond_to_command(self, full_message):
+    def respond_to_command(self, message):
         """Signed, operational command received. Verify signature and return message."""
-        msg, sig = full_message[:-self.sa_mac_len], full_message[-self.sa_mac_len:]
-        if not constant_time_compare(msg, self.mac(msg)):
+        msg, sig = message[:-self.sa_mac_len], message[-self.sa_mac_len:]
+        if not constant_time_compare(sig, self.mac('\x02' + msg + str(self.c_seq))):
             raise SignatureException()
+
+        # Perform command and send response
+        #send(self)
