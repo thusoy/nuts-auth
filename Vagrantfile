@@ -4,12 +4,9 @@
 VAGRANTFILE_API_VERSION = "2"
 
 $provision_script = <<EOF
-if [ ! -z $(python -c "import dtls") ]; then
-  apt-get update
-  apt-get upgrade -y
-  apt-get install python-dev python-pip -y
-  pip install dtls
-fi
+apt-get update
+apt-get install python-dev python-pip -y
+pip install pysha3 itsdangerous
 EOF
 
 
