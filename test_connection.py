@@ -6,7 +6,7 @@ import json
 from functools import partial
 import quopri
 
-from nuts import AuthChannel, _messages, send as _send, hkdf_expand, mac, get_mac, Message
+from nuts import AuthChannel, _messages, send as _send, hkdf_expand, mac, Message
 
 shared_key = '39115349d0124171cccbdd46ce24c55f98a66809bff4f73d344abf81351a9ff6'.decode('hex')
 
@@ -18,8 +18,6 @@ R_b = os.urandom(8)
 
 conn = AuthChannel(id_a, shared_key)
 
-print 'R_b', quopri.encodestring(R_b)
-
 
 def send(msg):
     _send(id_b, id_a, msg)
@@ -28,6 +26,10 @@ def send(msg):
 m0 = '\x00' + R_b
 m0_digest = mac(shared_key, id_a + id_b + m0)
 send(m0 + m0_digest)
+
+def ascii_bin(binstr):
+    return repr(quopri.encodestring(binstr))
+
 
 # First message from sat should be 128 bits + 1 byte msg type, and should verify the identify of the sat
 assert _messages[-1].msg[0] == '\x80'
@@ -48,35 +50,40 @@ sa_proposal = {
 }
 
 m2 = '\x01' + json.dumps(sa_proposal)
-m2_mac_input = id_a + id_b + m2 + _messages[-1].msg[:9]
+m2_mac_input = id_a + id_b + m2 + _messages[-1].msg[1:9]
 m2_digest = mac(shared_key, m2_mac_input)
 send(m2 + m2_digest)
-session_key = hkdf_expand(shared_key + R_a + R_b, length=16)
-
-
-msg = json.dumps(sa_proposal)
-
-send(id_a, msg + mac(session_key, msg))
-
-conn.sa_proposal_received(_messages[-1].msg)
 
 # SA response
-proposal_response = json.loads(_messages[-1].msg[:-8])
+proposal_response_raw, sig = _messages[-1].msg[:-8], _messages[-1].msg[-8:]
+
+# Verify sig
+assert sig == mac(shared_key, id_a + id_b + proposal_response_raw + R_a + R_b)
+
+proposal_response = json.loads(proposal_response_raw[1:])
+
 
 # Should agree on sha3_512
 assert proposal_response['mac'] == 'sha3_512'
 
-conn_mac = get_mac(proposal_response['mac'], proposal_response['mac_len'])
+# Should agree on 8 byte sigs
+assert proposal_response['mac_len'] == 8
 
-# Should be valid signature
-assert _messages[-1].msg[-8:] == conn_mac(session_key, _messages[-1].msg[:-8])
+session_key = hkdf_expand(shared_key + R_a + R_b, length=16)
+s_seq = c_seq = 1
 
+def conn_mac(message):
+    return mac(session_key, id_a + id_b + message + str(c_seq),
+        algo=proposal_response['mac'],
+        mac_len=proposal_response['mac_len'])
 
 # Send first actual command
 cmd = {'cmd': 'TakePicture'}
-cmd_msg = json.dumps(cmd)
-send(id_a, cmd_msg + conn_mac(session_key, cmd_msg))
+cmd_msg = '\x02' + json.dumps(cmd)
+send(cmd_msg + conn_mac(cmd_msg))
+
+# Expect ACK
+ack, sig = _messages[-1].msg[-8:], _messages[-1].msg[-8:]
 
 
-
-
+c_seq += 1
