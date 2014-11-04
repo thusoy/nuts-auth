@@ -4,11 +4,11 @@ from .hkdf import hkdf_expand
 from collections import namedtuple
 from itsdangerous import constant_time_compare
 from functools import partial
+import msgpack
 import binascii
 import quopri
 import os
 import string
-import json
 import hashlib
 import sha3
 
@@ -16,6 +16,8 @@ import sha3
 # Store messages passed back and forth for inspection
 Message = namedtuple('Message', ['source', 'dest', 'msg'])
 _messages = []
+_packer = msgpack.Packer(use_bin_type=True)
+_unpacker = msgpack.Unpacker()
 
 def send(source, dest, msg):
     print 'Sending msg of length %d to %s: %s' % (len(msg), dest, repr(quopri.encodestring(msg)))
@@ -168,7 +170,7 @@ class Session(object):
         if not constant_time_compare(self.mac('\x01' + msg + self.R_a), sig):
             raise SignatureException()
 
-        msg_data = json.loads(msg)
+        msg_data = _unpacker.unpack(msg)
         suggested_macs = set(msg_data.get('macs', []))
         # Pick the first MAC from supported_macs that's supported by both parties
         for supported_mac in AuthChannel.supported_macs:
@@ -189,7 +191,7 @@ class Session(object):
             'mac': selected_mac,
             'mac_len': suggested_mac_len,
         }
-        response_msg = '\x81' + json.dumps(response)
+        response_msg = '\x81' + _packer.pack(response)
         response = self.send(response_msg + self.mac(response_msg + self.R_a + self.R_b))
         self.sa_mac_len = suggested_mac_len
         self.sa_mac = selected_mac
