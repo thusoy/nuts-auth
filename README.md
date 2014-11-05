@@ -25,7 +25,7 @@ restart the service:
 Install `dnsmasq` to assign IP addresses to peers on the network:
 
     $ sudo apt-get install dnsmasq
-    $ sudo sh -c "echo -e interface=wlan0\ndhcp-range=10.0.0.2,10.0.0.255,255.255.255.0,12h >> /etc/dnsmasq.conf"
+    $ sudo sh -c "echo -e 'interface=wlan0\ndhcp-range=10.0.0.2,10.0.0.255,255.255.255.0,12h\nlisten-address=10.0.0.1' >> /etc/dnsmasq.conf"
     $ sudo service dnsmasq restart
 
 Configure the `/etc/network/interfaces` for the server:
@@ -65,3 +65,8 @@ On each of the devices, install the necessary libraries to run the NUTS scheme:
     $ sudo pip install pysha3
 
 Transport for the example app uses `msgpack`, a lightweight binary (and soon IETF standardized) messaging format, comparable to JSON.
+
+Troubleshooting
+===============
+
+Connection lost between client and server? It might have been the `hostapd` driver crashing, if you run `ifconfig wlan0` on the server and it doesn't report an IP, that's likely the problem. Try to restart the service to bring it back, `sudo service hostapd restart`, and bring up the connection again on the client, `sudo ifup wlan0`.
