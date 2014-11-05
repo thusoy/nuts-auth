@@ -19,8 +19,12 @@ _messages = []
 _packer = msgpack.Packer(use_bin_type=True)
 _unpacker = msgpack.Unpacker()
 
+def ascii_bin(binstr):
+    return repr(quopri.encodestring(binstr))
+
+
 def send(source, dest, msg):
-    print 'Sending msg of length %d to %s: %s' % (len(msg), dest, repr(quopri.encodestring(msg)))
+    print 'Sending msg of length %d to %s: %s' % (len(msg), dest, ascii_bin(msg))
     msg = Message(source, dest, msg)
     _messages.append(msg)
     return msg
