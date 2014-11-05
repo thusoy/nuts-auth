@@ -52,3 +52,9 @@ protocol NUTSAuth (I,R) {
         claim(R, Commit, I, Ks); # Why does this cause failure?
     };
 }
+
+
+# Use Ks on SA-reply
+# Send another CMD to see if then catches the replay attack (probably)
+# See if the Ks-modification impacts the Commit claim
+# If not, remove the commit claim
