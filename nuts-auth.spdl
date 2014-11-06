@@ -3,34 +3,33 @@ usertype SecurityAssociation, Command, SequenceNumber;
 const SAprop, SA: SecurityAssociation;
 const Sseq1, Sseq2, Cseq1, Cseq2: SequenceNumber;
 const CMD, ACK: Command;
-macro Ks = KDF(k(BS, Sat), Ra, Rb);
+macro Ks = KDF(k(GS, Sat), Ra, Rb);
 
-protocol NUTSAuth (BS,Sat) {
+protocol NUTSAuth (GS,Sat) {
 
-
-    role BS {
+    role GS {
         var Ra: Nonce;
         fresh Rb: Nonce;
 
         # Key exchange and mutual authentication
-        send_1(BS, Sat, Rb, MAC(k(BS, Sat), BS, Sat, Rb));
-        recv_2(Sat, BS, Ra, MAC(k(BS, Sat), Sat, BS, Ra, Rb));
-        send_3(BS, Sat, SAprop, MAC(k(BS, Sat), BS, Sat, SAprop, Ra));
-        recv_4(Sat, BS, SA, MAC(Ks, Sat, BS, SA));
+        send_1(GS, Sat, Rb, MAC(k(GS, Sat), GS, Sat, Rb));
+        recv_2(Sat, GS, Ra, MAC(k(GS, Sat), Sat, GS, Ra, Rb));
+        send_3(GS, Sat, SAprop, MAC(k(GS, Sat), GS, Sat, SAprop, Ra));
+        recv_4(Sat, GS, SA, MAC(Ks, Sat, GS, SA));
 
         # Send command
-        send_5(BS, Sat, CMD, MAC(Ks, Cseq1, CMD));
-        recv_6(Sat, BS, ACK, MAC(Ks, Sseq1, ACK));
+        send_5(GS, Sat, CMD, MAC(Ks, Cseq1, CMD));
+        recv_6(Sat, GS, ACK, MAC(Ks, Sseq1, ACK));
 
         # Send another command (repeat CMDs for scyther to spot replay attacks)
-        send_7(BS, Sat, CMD, MAC(Ks, Cseq2, CMD));
-        recv_8(Sat, BS, ACK, MAC(Ks, Sseq2, ACK));
+        send_7(GS, Sat, CMD, MAC(Ks, Cseq2, CMD));
+        recv_8(Sat, GS, ACK, MAC(Ks, Sseq2, ACK));
 
-        claim(BS, Alive);
-        claim(BS, Secret, Ks);
-        claim(BS, Weakagree);
-        claim(BS, Niagree);
-        claim(BS, Nisynch);
+        claim(GS, Alive);
+        claim(GS, Secret, Ks);
+        claim(GS, Weakagree);
+        claim(GS, Niagree);
+        claim(GS, Nisynch);
     };
 
     role Sat {
@@ -38,18 +37,18 @@ protocol NUTSAuth (BS,Sat) {
         var Rb: Nonce;
 
         # Key exchange and mutual authentication
-        recv_1(BS, Sat, Rb, MAC(k(BS, Sat), BS, Sat, Rb));
-        send_2(Sat, BS, Ra, MAC(k(BS, Sat), Sat, BS, Ra, Rb));
-        recv_3(BS, Sat, SAprop, MAC(k(BS, Sat), BS, Sat, SAprop, Ra));
-        send_4(Sat, BS, SA, MAC(Ks, Sat, BS, SA));
+        recv_1(GS, Sat, Rb, MAC(k(GS, Sat), GS, Sat, Rb));
+        send_2(Sat, GS, Ra, MAC(k(GS, Sat), Sat, GS, Ra, Rb));
+        recv_3(GS, Sat, SAprop, MAC(k(GS, Sat), GS, Sat, SAprop, Ra));
+        send_4(Sat, GS, SA, MAC(Ks, Sat, GS, SA));
 
         # Receive command
-        recv_5(BS, Sat, CMD, MAC(Ks, Cseq1, CMD));
-        send_6(Sat, BS, ACK, MAC(Ks, Sseq1, ACK));
+        recv_5(GS, Sat, CMD, MAC(Ks, Cseq1, CMD));
+        send_6(Sat, GS, ACK, MAC(Ks, Sseq1, ACK));
 
         # Receive second command
-        recv_7(BS, Sat, CMD, MAC(Ks, Cseq2, CMD));
-        send_8(Sat, BS, ACK, MAC(Ks, Sseq2, ACK));
+        recv_7(GS, Sat, CMD, MAC(Ks, Cseq2, CMD));
+        send_8(Sat, GS, ACK, MAC(Ks, Sseq2, ACK));
 
         claim(Sat, Alive);
         claim(Sat, Secret, Ks);
