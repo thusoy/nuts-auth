@@ -1,6 +1,7 @@
 hashfunction MAC, KDF;
-usertype SecurityAssociation, Command, Reply;
+usertype SecurityAssociation, Command, SequenceNumber;
 const SAprop, SA: SecurityAssociation;
+const Sseq1, Sseq2, Cseq1, Cseq2: SequenceNumber;
 const CMD, ACK: Command;
 macro Ks = KDF(k(I, R), Ra, Rb);
 
@@ -18,8 +19,12 @@ protocol NUTSAuth (I,R) {
         recv_4(R, I, SA, MAC(Ks, R, I, Ra, Rb, SA));
 
         # Send command
-        send_5(I, R, CMD, MAC(Ks, CMD));
-        recv_6(R, I, ACK, MAC(Ks, ACK));
+        send_5(I, R, CMD, MAC(Ks, Cseq1, CMD));
+        recv_6(R, I, ACK, MAC(Ks, Sseq1, ACK));
+
+        # Send another command (repeat CMDs for scyther to spot replay attacks)
+        send_7(I, R, CMD, MAC(Ks, Cseq2, CMD));
+        recv_8(R, I, ACK, MAC(Ks, Sseq2, ACK));
 
         claim(I, Alive); # What does this do?
         claim(I, Secret, Ks);
@@ -39,8 +44,12 @@ protocol NUTSAuth (I,R) {
         send_4(R, I, SA, MAC(Ks, R, I, Ra, Rb, SA));
 
         # Receive command
-        recv_5(I, R, CMD, MAC(Ks, CMD));
-        send_6(R, I, ACK, MAC(Ks, ACK));
+        recv_5(I, R, CMD, MAC(Ks, Cseq1, CMD));
+        send_6(R, I, ACK, MAC(Ks, Sseq1, ACK));
+
+        # Receive second command
+        recv_7(I, R, CMD, MAC(Ks, Cseq2, CMD));
+        send_8(R, I, ACK, MAC(Ks, Sseq2, ACK));
 
         claim(R, Alive); # What does this do?
         claim(R, Secret, Ks);
