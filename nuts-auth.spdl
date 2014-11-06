@@ -26,9 +26,9 @@ protocol NUTSAuth (BS,Sat) {
         send_7(BS, Sat, CMD, MAC(Ks, Cseq2, CMD));
         recv_8(Sat, BS, ACK, MAC(Ks, Sseq2, ACK));
 
-        claim(BS, Alive); # What does this do?
+        claim(BS, Alive);
         claim(BS, Secret, Ks);
-        claim(BS, Weakagree); # What does this do?
+        claim(BS, Weakagree);
         claim(BS, Niagree);
         claim(BS, Nisynch);
     };
@@ -51,14 +51,10 @@ protocol NUTSAuth (BS,Sat) {
         recv_7(BS, Sat, CMD, MAC(Ks, Cseq2, CMD));
         send_8(Sat, BS, ACK, MAC(Ks, Sseq2, ACK));
 
-        claim(Sat, Alive); # What does this do?
+        claim(Sat, Alive);
         claim(Sat, Secret, Ks);
-        claim(Sat, Weakagree); # What does this do?
+        claim(Sat, Weakagree);
         claim(Sat, Niagree);
         claim(Sat, Nisynch);
     };
 }
-
-
-# Use Ks on SA-reply
-# Send another CMD to see if then catches the replay attack (probably)
