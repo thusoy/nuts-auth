@@ -60,6 +60,8 @@ class AuthChannel(object):
         'sha3_512',
         'sha3_384',
         'sha3_256',
+        'hmac-sha1',
+        'hmac-sha256',
     ]
 
     def __init__(self, id_a, shared_key):
@@ -145,11 +147,6 @@ class Session(object):
         h = self.mac(msg + self.R_b)
         msg = msg + h
         return self.send(msg)
-
-
-    def respond_to_invalid_mac_from_server(self, message):
-        """ I seem to have sent an invalid MAC. This is weird. """
-        raise 'Invalid mac sent by server, no idea what just happened'
 
 
     def send(self, message):

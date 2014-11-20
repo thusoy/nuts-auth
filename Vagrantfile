@@ -5,8 +5,9 @@ VAGRANTFILE_API_VERSION = "2"
 
 $provision_script = <<EOF
 apt-get update
-apt-get install python-dev python-pip -y
+apt-get install python-dev python-pip libffi-dev -y
 pip install pysha3 itsdangerous
+pip install git+https://github.com/pyca/pynacl
 EOF
 
 
