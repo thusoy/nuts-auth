@@ -8,12 +8,15 @@ from collections import namedtuple
 
 _ProtocolMessage = namedtuple('ProtocolMessage', ['byte', 'description'])
 
+# Client messages
 CLIENT_HELLO               = _ProtocolMessage('\x00', 'First message from client, with challenge to server and protocol version.')
 SA_PROPOSAL                = _ProtocolMessage('\x01', 'Security association suggested by client.')
 COMMAND                    = _ProtocolMessage('\x02', 'Command from client.')
 REKEY                      = _ProtocolMessage('\x03', 'Generate new master key')
 REKEY_CONFIRM              = _ProtocolMessage('\x04', 'Confirm successful re-key by signing a random nonce with the new key')
 CLIENT_TERMINATE           = _ProtocolMessage('\x0f', 'Client is terminating the session.')
+
+# Server messages
 SERVER_HELLO               = _ProtocolMessage('\x80', 'First response from server, responds to client challenge and challenges client')
 SA                         = _ProtocolMessage('\x81', 'Negotiated security association from server.')
 REPLY                      = _ProtocolMessage('\x82', 'Reply to command issues by client.')
