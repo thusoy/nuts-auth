@@ -243,5 +243,49 @@ class CommandTest(unittest.TestCase):
         self.assertIsNone(response)
 
 
+    def test_command_invalid_length(self):
+        msg = b'\x02'
+        response = self.channel.receive(Message('source', msg))
+        self.assertIsNone(response)
+
+
+    def test_command_invalid_mac(self):
+        msg = b'\x02'
+        sig = b'\x00'*8
+        response = self.channel.receive(Message('source', msg + sig))
+        self.assertIsNone(response)
+
+
+    def test_command_no_app(self):
+        self.channel.set_app(None)
+        msg = b'\x02'
+        sig = hashlib.sha3_256(self.session_key + msg).digest()[:8]
+        response = self.channel.receive(Message('source', msg + sig))
+        self.assertIsNone(response)
+
+
+    def test_command_app_crash(self):
+        class CrashingApp(object):
+            def got_message(self, message):
+                1/0
+
+        self.channel.set_app(CrashingApp())
+        msg = b'\x02'
+        sig = hashlib.sha3_256(self.session_key + msg).digest()[:8]
+        response = self.channel.receive(Message('source', msg + sig))
+        self.assertIsNone(response)
+
+
+    def test_command_mute_app(self):
+        class MuteApp(object):
+            def got_message(self, message):
+                return None
+        self.channel.set_app(MuteApp())
+        msg = b'\x02'
+        sig = hashlib.sha3_256(self.session_key + msg).digest()[:8]
+        response = self.channel.receive(Message('source', msg + sig))
+        self.assertIsNone(response)
+
+
 if __name__ == '__main__':
     unittest.main()
