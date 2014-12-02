@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from . import messages
 from .hkdf import HKDF
-from .utils import ascii_bin, decode_version, encode_version, mac
+from .utils import ascii_bin, decode_version, encode_version
 from .varint import encode_varint, decode_varint
 
 from collections import namedtuple
@@ -13,9 +13,11 @@ from nacl.c import crypto_scalarmult
 from nacl.public import PrivateKey
 import msgpack
 import binascii
+import hashlib
 import os
-import string
+import sha3
 import six
+import string
 
 
 # The main message class that the AuthChannel operate on
@@ -144,6 +146,13 @@ class Session(object):
         return handler(message[1:])
 
 
+    def verify_mac(self, message, **kwargs):
+        mac_len = getattr(self, 'sa_mac_len', 8)
+        expected_mac = self.get_mac(message[:-mac_len])
+        mac = message[-mac_len:]
+        return constant_time_compare(mac, expected_mac)
+
+
     def respond_to_client_hello(self, message):
         """ Establishing new connection to id_b, send a 128 bit response consisting of
         8 bytes challenge, and a H_k(id_a, id_b, R_a) truncated to 8 bytes.
@@ -153,13 +162,11 @@ class Session(object):
             return
 
         # Verify incoming MAC
-        expected_mac = self.mac(b'\x00' + message[:-8])
-        if not constant_time_compare(expected_mac, message[-8:]):
+        if not self.verify_mac(b'\x00' + message, algo='sha3_256', length=8):
             return
 
         # Check that version is supported
         client_version = decode_version(message[:1])
-        #from nose.tools import set_trace as f; f()
         if not client_version == self.version:
             # reply with supported version, and copy of client's message
             return self.send(messages.VERSION_NOT_SUPPORTED.byte +
@@ -171,22 +178,25 @@ class Session(object):
         self.R_b = message[1:9]
 
         msg = messages.SERVER_HELLO.byte + self.R_a
-        h = self.mac(msg + self.R_b)
-        msg = msg + h
+        mac = self.get_mac(msg, self.R_b)
         self.state = ServerState.wait_for_sa_proposal
-        return self.send(msg)
+        return self.send(msg + mac)
 
 
     def send(self, message):
         return send(self.id_b, message)
 
 
-    def mac(self, mac_input):
-        """ Shortcut for `mac(self.shared_key, mac_input)."""
+    def get_mac(self, *args, **kwargs):
         mac_len = getattr(self, 'sa_mac_len', 8)
-        key = getattr(self, 'session_key', self.shared_key)
-        mac_func = getattr(self, 'sa_mac', 'sha3_256')
-        return mac(key, mac_input, algo=mac_func, mac_len=mac_len)
+        key = kwargs.get('key', getattr(self, 'session_key', self.shared_key))
+        mac = getattr(self, 'sa_mac', 'sha3_256')
+        mac_input = b''.join(args)
+        print('MACing %s (%d) with key %s (%d)' % (ascii_bin(mac_input),
+            len(mac_input), ascii_bin(key), len(key)))
+        hash_func = getattr(hashlib, mac)
+        #return mac(key, , algo=mac_func, mac_len=mac_len)
+        return hash_func(key + mac_input).digest()[:mac_len]
 
 
     def respond_to_client_terminate(self, message):
@@ -202,7 +212,8 @@ class Session(object):
 
         # Verify MAC
         msg, sig = message[:-8], message[-8:]
-        if not constant_time_compare(self.mac(b'\x01' + msg + self.R_a), sig):
+        expected_mac = self.get_mac(b'\x01', msg, self.R_a)
+        if not constant_time_compare(sig, expected_mac):
             print('Invalid mac on sa proposal')
             return
 
@@ -235,11 +246,11 @@ class Session(object):
         if not isinstance(suggested_mac_len, int):
             print('mac_len not int')
             return
-        if not (4 <= suggested_mac_len <= 32):
-            print("suggested mac outside permitted range of 8-32 bytes")
+        if not 4 <= suggested_mac_len <= 32:
+            print("suggested mac_len outside permitted range of 4-32 bytes")
             return
 
-        # All jolly good, notify id_b of chosen MAC and signature length
+        # All jolly good, notify client of chosen MAC and signature length
 
         # Expand session key
         self.session_key = HKDF(self.R_a + self.R_b, self.shared_key).expand(self.version, length=16)
@@ -249,7 +260,7 @@ class Session(object):
             'mac_len': suggested_mac_len,
         }
         response = messages.SA.byte + msgpack.dumps(sa)
-        response = self.send(response + self.mac(response))
+        response = self.send(response + self.get_mac(response))
 
         self.sa_mac = selected_mac.decode('ascii')
         self.sa_mac_len = suggested_mac_len
@@ -270,8 +281,7 @@ class Session(object):
 
         # Verify MAC
         msg, sig = message[:-self.sa_mac_len], message[-self.sa_mac_len:]
-        expected_mac = self.mac(b'\x03' + msg)
-        if not constant_time_compare(sig, expected_mac):
+        if not self.verify_mac(b'\x03' + message):
             print('Invalid MAC on rekey')
             return
 
@@ -280,7 +290,7 @@ class Session(object):
         self.new_master_key = crypto_scalarmult(pkey._private_key, client_pubkey)
         msg = messages.REKEY_RESPONSE.byte + pkey.public_key._public_key
         self.state = ServerState.rekey
-        return self.send(msg + self.mac(msg))
+        return self.send(msg + self.get_mac(msg))
 
 
     def respond_to_rekey_confirm(self, message):
@@ -291,7 +301,7 @@ class Session(object):
 
         # Verify MAC
         msg, sent_mac = message[:-self.sa_mac_len], message[-self.sa_mac_len:]
-        expected_mac = mac(self.new_master_key, b'\x04', algo=self.sa_mac, mac_len=self.sa_mac_len)
+        expected_mac = self.get_mac(b'\x04', key=self.new_master_key)
         if not constant_time_compare(sent_mac, expected_mac):
             print('Invalid MAC of rekey confirm')
             return
@@ -300,7 +310,7 @@ class Session(object):
         self.shared_key = self.new_master_key
         msg = messages.REKEY_COMPLETED.byte
         self.state = ServerState.rekey_confirmed
-        return self.send(msg + mac(self.shared_key, msg, algo=self.sa_mac, mac_len=self.sa_mac_len))
+        return self.send(msg + self.get_mac(msg, key=self.shared_key))
 
 
     def rng(self, num_bytes):
@@ -325,7 +335,7 @@ class Session(object):
 
         # Verify MAC
         msg, sig = message[:-self.sa_mac_len], message[-self.sa_mac_len:]
-        if not constant_time_compare(sig, self.mac(b'\x02' + msg)):
+        if not self.verify_mac(b'\x02' + message):
             print('Invalid mac')
             return
 
@@ -361,4 +371,4 @@ class Session(object):
         if reply:
             msg = messages.REPLY.byte + encode_varint(self.s_seq) + reply
             self.s_seq += 1
-            return self.send(msg + self.mac(msg))
+            return self.send(msg + self.get_mac(msg))

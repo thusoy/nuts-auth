@@ -1,7 +1,5 @@
-import hashlib
-import quopri
-import sha3
 import six
+import quopri
 
 
 def ascii_bin(binstr):
@@ -23,12 +21,3 @@ def decode_version(version):
     major = six.byte2int(version) >> 4
     minor = six.byte2int(version) & 15
     return ('%d.%d' % (major, minor)).encode('ascii')
-
-
-def mac(key, msg, algo='sha3_256', mac_len=8):
-    """ Create a secure MAC of the message with the key, using
-    Keccak (SHA-3) 256 truncated to 64 bits.
-    """
-    print('MACing %s with key %s (%d)' % (repr(quopri.encodestring(msg)), repr(quopri.encodestring(key)), len(key)))
-    hash_func = getattr(hashlib, algo)
-    return hash_func(key + msg).digest()[:mac_len]
