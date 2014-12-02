@@ -360,6 +360,6 @@ class Session(object):
 
         # Send reply from app if one was given
         if reply:
-            msg = encode_varint(self.s_seq) + reply
+            msg = messages.REPLY.byte + encode_varint(self.s_seq) + reply
             self.s_seq += 1
             return self.send(msg + self.mac(msg))
