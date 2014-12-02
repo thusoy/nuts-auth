@@ -14,7 +14,13 @@ import sha3
 
 
 # Store messages passed back and forth for inspection
-Message = namedtuple('Message', ['source', 'dest', 'msg'])
+Message = namedtuple('Message', ['source', 'msg'])
+#class Message(object):
+#
+#    def __init__(self, source, raw_msg):
+#        self.raw_msg = raw_msg
+#        self.source = source
+
 _messages = []
 _packer = msgpack.Packer(use_bin_type=True)
 _unpacker = msgpack.Unpacker()
@@ -23,16 +29,33 @@ def ascii_bin(binstr):
     return repr(quopri.encodestring(binstr))
 
 
-def send(source, dest, msg):
+def encode_version(version):
+    """ Takes a versino like '1.0' or '2.1' and encodes it into a single byte. """
+    major, minor = map(int, version.split('.'))
+    if not (0 < major < 16 and 0 <= minor < 16):
+        raise ValueError("Can't encode version %s, major or minor version outside range(0, 16)" % version)
+    return chr(major << 4 | minor)
+
+
+def decode_version(version):
+    """ Takes a byte version and decodes it into human-readable <major>.<minor> format. """
+    if len(version) != 1:
+        raise ValueError('%s is an invalid version specifier.' % version)
+    major = ord(version) >> 4
+    minor = ord(version) & 15
+    return '%d.%d' % (major, minor)
+
+
+def send(dest, msg):
     print 'Sending msg of length %d to %s: %s' % (len(msg), dest, ascii_bin(msg))
-    msg = Message(source, dest, msg)
+    msg = Message(dest, msg)
     _messages.append(msg)
     return msg
 
 
 def mac(key, msg, algo='sha3_256', mac_len=8):
     """ Create a secure MAC of the message with the key, using
-    Keccak (SHA-3) 512 truncated to 64 bits.
+    Keccak (SHA-3) 256 truncated to 64 bits.
     """
     print 'MACing %s with key %s (%d)' % (repr(quopri.encodestring(msg)), repr(quopri.encodestring(key)), len(key))
     hash_func = getattr(hashlib, algo)
@@ -49,11 +72,6 @@ class SignatureException(NUTSAuthException):
 
 class AuthChannel(object):
 
-    #: Version of the protocol supported. Client version is sent in the first
-    #: CLIENT_HELLO message, if incompatible a VERSION_NOT_SUPPORTED message
-    #: will be replied.
-    version = 1
-
     #: MACs supported by this satellite/server. Used in the SA negotiation, should be ordered
     #: by preference (strength).
     supported_macs = [
@@ -64,22 +82,18 @@ class AuthChannel(object):
         'hmac-sha256',
     ]
 
-    def __init__(self, id_a, shared_key):
+    def __init__(self, shared_key):
         """ Create a new auth channel context to keep around. """
-        self.id_a = id_a
         self.shared_key = shared_key
         self.sessions = {}
 
 
     def receive(self, message):
         """ Handle incoming message on the channel. """
-        if not message.dest == self.id_a:
-            print 'Received message intended for someone else, ignoring...'
-            return
         if message.source in self.sessions:
             session = self.sessions.get(message.source)
         else:
-            session = Session(self.id_a, message.source, self.shared_key)
+            session = Session(message.source, self.shared_key)
             self.sessions[message.source] = session
         response = session.handle(message.msg)
         if session.terminate:
@@ -91,8 +105,12 @@ class AuthChannel(object):
 class Session(object):
     """ A connection between a given satellite and groundstation. """
 
-    def __init__(self, id_a, id_b, shared_key):
-        self.id_a = id_a
+    #: Version of the protocol supported. Client version is sent in the first
+    #: CLIENT_HELLO message, if incompatible a VERSION_NOT_SUPPORTED message
+    #: will be replied.
+    version = '1.0'
+
+    def __init__(self, id_b, shared_key):
         self.id_b = id_b
         self.shared_key = shared_key
         self.terminate = False
@@ -133,15 +151,26 @@ class Session(object):
         """ Establishing new connection to id_b, send a 128 bit response consisting of
         8 bytes challenge, and a H_k(id_a, id_b, R_a) truncated to 8 bytes.
         """
-        self.R_a = self.rng(8)
-        self.R_b = message[:8]
+        # Verify that incoming packet has correct length
+        if not len('\x00' + message) == 18:
+            return
 
         # Verify incoming MAC
-        expected_mac = self.mac('\x00' + message[:8])
-        if not constant_time_compare(expected_mac, message[8:]):
-            incorrect_mac_message = messages.INVALID_MAC_FROM_CLIENT.byte
-            incorrect_mac_message += self.mac(incorrect_mac_message)
-            return send(self.id_a, self.id_b, incorrect_mac_message)
+        expected_mac = self.mac('\x00' + message[:-8])
+        if not constant_time_compare(expected_mac, message[-8:]):
+            return
+
+        # Check that version is supported
+        client_version = decode_version(message[0])
+        if not client_version == self.version:
+            # reply with supported version, and copy of client's message
+            return self.send(messages.VERSION_NOT_SUPPORTED.byte +
+                encode_version(self.version) +
+                message[:-8])
+
+
+        self.R_a = self.rng(8)
+        self.R_b = message[1:9]
 
         msg = messages.SERVER_HELLO.byte + self.R_a
         h = self.mac(msg + self.R_b)
@@ -150,7 +179,7 @@ class Session(object):
 
 
     def send(self, message):
-        return send(self.id_a, self.id_b, message)
+        return send(self.id_b, message)
 
 
     def mac(self, mac_input):
@@ -158,7 +187,7 @@ class Session(object):
         mac_len = getattr(self, 'sa_mac_len', 8)
         key = getattr(self, 'session_key', self.shared_key)
         mac_func = getattr(self, 'sa_mac', 'sha3_256')
-        return mac(key, self.id_a + self.id_b + mac_input, algo=mac_func, mac_len=mac_len)
+        return mac(key, mac_input, algo=mac_func, mac_len=mac_len)
 
 
     def respond_to_client_terminate(self, message):
@@ -204,6 +233,14 @@ class Session(object):
         self.c_seq = self.s_seq = 1
 
         return response
+
+
+    def respond_to_rekey(self, message):
+        raise NotImplemented()
+
+
+    def respond_to_rekey_confirm(self, message):
+        raise NotImplemented()
 
 
     def rng(self, num_bytes):
