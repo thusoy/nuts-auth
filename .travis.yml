@@ -13,7 +13,7 @@ script:
   - nosetests --with-coverage --cover-branches --cover-html --cover-package nuts
 
   # Add code coverage to gh-pages
-  - if [[ $TRAVIS_BRANCH == 'master' ]] && [[ $TRAVIS_PULL_REQUEST == 'false' ]]; then ./tools/coverage_to_gh_pages.sh; fi
+  - if [[ $TRAVIS_BRANCH == 'master' ]] && [[ $TRAVIS_PULL_REQUEST == 'false' ]] && [[ $TRAVIS_PYTHON_VERSION == "2.7" ]]; then ./tools/coverage_to_gh_pages.sh; fi
 
 notifications:
   email: false
