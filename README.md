@@ -1,4 +1,4 @@
-nuts-auth
+nuts-auth [![Build Status](https://travis-ci.org/thusoy/nuts-auth.svg?branch=master)](https://travis-ci.org/thusoy/nuts-auth)
 ================
 
 Experiments for my project on authenticating a radio uplink to the NUTS cubesat.

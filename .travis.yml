@@ -1,0 +1,25 @@
+language: python
+
+python:
+  - "2.7"
+  - "3.4"
+
+install:
+  - sudo apt-get install -y libffi-dev
+  - pip install git+https://github.com/pyca/pynacl
+  - pip install .
+
+script:
+  - nosetests --with-coverage --cover-branches --cover-html --cover-package nuts
+
+  # Add code coverage to gh-pages
+  - if [[ $TRAVIS_BRANCH == 'master' ]] && [[ $TRAVIS_PULL_REQUEST == 'false' ]]; then ./tools/coverage_to_gh_pages.sh; fi
+
+notifications:
+  email: false
+
+env:
+  global:
+
+    # GITHUB_TOKEN granting access to this repo
+    - secure: "bvyLD7Ro/ypOiM+PjTdEbfDf2P4QnqdsTS1G9EIrZYgUDVHAFNJ3ceLR6slBlaaIgaxTxeMKvpT2KXEHJowY8Z/F2+dMX2nolV2E0V7k7dktVSROiqaztPQGLNyX/6/GTpT1osdKxg2QG87BA6tWpWsjZqsxHF/92KZNIi6w48I="
