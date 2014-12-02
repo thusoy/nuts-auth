@@ -322,8 +322,22 @@ class RekeyTest(EstablishedSessionTestCase):
         self.assertEqual(self.session_key, self.channel.shared_key)
 
 
-class NonDefaultParametersSessionTest(CommandTest):
-    """ Re-run all the command tests with non-default mac and mac_len. """
+    def test_rekey_invalid_length(self):
+        for pubkey in [b'\x00', b'\x00'*34]:
+            msg = b'\x03' + pubkey
+            response = self.send_with_mac(msg)
+            self.assertIsNone(response)
+
+
+    def test_rekey_invalid_mac(self):
+        msg = b'\x03' + b'\x00'*32
+        mac = b'\x00'*self.mac_len
+        response = self.get_response(msg + mac)
+        self.assertIsNone(response)
+
+
+class NonDefaultParametersSessionTest(CommandTest, RekeyTest):
+    """ Re-run all the tests from established state with non-default mac and mac_len. """
 
     mac = 'sha3_512'
     mac_len = 16
