@@ -9,7 +9,7 @@ from nuts.hkdf import HKDF
 class ClientHelloTest(unittest.TestCase):
 
     def setUp(self):
-        self.shared_secret = 'secret'
+        self.shared_secret = b'secret'
         self.channel = AuthChannel(self.shared_secret)
 
 
@@ -61,7 +61,7 @@ class ClientHelloTest(unittest.TestCase):
 class SAProposalTest(unittest.TestCase):
 
     def setUp(self):
-        self.shared_secret = 'secret'
+        self.shared_secret = b'secret'
         self.channel = AuthChannel(self.shared_secret)
 
         # Send valid client_hello to get channel into correct state
