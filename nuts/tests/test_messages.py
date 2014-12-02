@@ -228,6 +228,13 @@ class CommandTest(unittest.TestCase):
         self.assertEqual(response[1:-8], b'Hello, earthlings')
 
 
+    def test_command_invalid_type(self):
+        for type in [b'\x00', b'\x01', b'\x04', b'\x80']:
+            msg = type + b'Hello, world'
+            response = self.send_with_mac(msg)
+            self.assertIsNone(response)
+
+
     def test_command_replay(self):
         msg = b'\x02\x00' + b'Hello, space'
         sig = hashlib.sha3_256(self.session_key + msg).digest()[:8]
