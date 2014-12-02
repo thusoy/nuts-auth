@@ -5,7 +5,7 @@
     
     
     <meta http-equiv='X-UA-Compatible' content='IE=emulateIE7' />
-    <title>Coverage for nuts: 97%</title>
+    <title>Coverage for nuts: 98%</title>
     <link rel='stylesheet' href='style.css' type='text/css'>
     
     <script type='text/javascript' src='jquery.min.js'></script>
@@ -21,7 +21,7 @@
 <div id='header'>
     <div class='content'>
         <h1>Coverage for <b>nuts</b> :
-            <span class='pc_cov'>97%</span>
+            <span class='pc_cov'>98%</span>
         </h1>
         <img id='keyboard_icon' src='keybd_closed.png'>
         <h2 class='stats'>
@@ -30,7 +30,7 @@
             <span class='mis shortkey_m button_toggle_mis'>5 missing</span>
             <span class='exc shortkey_x button_toggle_exc'>0 excluded</span>
             
-                <span class='par run hide_run shortkey_p button_toggle_par'>3 partial</span>
+                <span class='par run hide_run shortkey_p button_toggle_par'>2 partial</span>
             
         </h2>
     </div>
@@ -408,7 +408,7 @@
 <p id='n343' class='stm run hide_run'><a href='#n343'>343</a></p>
 <p id='n344' class='stm run hide_run'><a href='#n344'>344</a></p>
 <p id='n345' class='stm run hide_run'><a href='#n345'>345</a></p>
-<p id='n346' class='stm par run hide_run'><a href='#n346'>346</a></p>
+<p id='n346' class='stm run hide_run'><a href='#n346'>346</a></p>
 <p id='n347' class='stm run hide_run'><a href='#n347'>347</a></p>
 <p id='n348' class='stm run hide_run'><a href='#n348'>348</a></p>
 <p id='n349' class='stm run hide_run'><a href='#n349'>349</a></p>
@@ -427,16 +427,17 @@
 <p id='n362' class='pln'><a href='#n362'>362</a></p>
 <p id='n363' class='pln'><a href='#n363'>363</a></p>
 <p id='n364' class='stm run hide_run'><a href='#n364'>364</a></p>
-<p id='n365' class='stm run hide_run'><a href='#n365'>365</a></p>
+<p id='n365' class='pln'><a href='#n365'>365</a></p>
 <p id='n366' class='stm run hide_run'><a href='#n366'>366</a></p>
 <p id='n367' class='stm run hide_run'><a href='#n367'>367</a></p>
 <p id='n368' class='stm run hide_run'><a href='#n368'>368</a></p>
-<p id='n369' class='pln'><a href='#n369'>369</a></p>
+<p id='n369' class='stm run hide_run'><a href='#n369'>369</a></p>
 <p id='n370' class='pln'><a href='#n370'>370</a></p>
-<p id='n371' class='stm run hide_run'><a href='#n371'>371</a></p>
+<p id='n371' class='pln'><a href='#n371'>371</a></p>
 <p id='n372' class='stm run hide_run'><a href='#n372'>372</a></p>
 <p id='n373' class='stm run hide_run'><a href='#n373'>373</a></p>
 <p id='n374' class='stm run hide_run'><a href='#n374'>374</a></p>
+<p id='n375' class='stm run hide_run'><a href='#n375'>375</a></p>
                 
             </td>
             <td class='text' valign='top'>
@@ -785,7 +786,7 @@
 <p id='t343' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>seqnum_bytes</span> <span class='op'>=</span> <span class='op'>[</span><span class='op'>]</span><span class='strut'>&nbsp;</span></p>
 <p id='t344' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>for</span> <span class='nam'>byte</span> <span class='key'>in</span> <span class='nam'>six</span><span class='op'>.</span><span class='nam'>iterbytes</span><span class='op'>(</span><span class='nam'>msg</span><span class='op'>)</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
 <p id='t345' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>seqnum_bytes</span><span class='op'>.</span><span class='nam'>append</span><span class='op'>(</span><span class='nam'>byte</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t346' class='stm par run hide_run'><span class='annotate' title='no jump to this line number'>344</span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>if</span> <span class='nam'>byte</span> <span class='op'>&gt;&gt;</span> <span class='num'>7</span> <span class='op'>==</span> <span class='num'>0</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
+<p id='t346' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>if</span> <span class='nam'>byte</span> <span class='op'>&gt;&gt;</span> <span class='num'>7</span> <span class='op'>==</span> <span class='num'>0</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
 <p id='t347' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>break</span><span class='strut'>&nbsp;</span></p>
 <p id='t348' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>client_seqnum</span> <span class='op'>=</span> <span class='nam'>decode_varint</span><span class='op'>(</span><span class='nam'>seqnum_bytes</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
 <p id='t349' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>if</span> <span class='key'>not</span> <span class='nam'>client_seqnum</span> <span class='op'>==</span> <span class='nam'>self</span><span class='op'>.</span><span class='nam'>c_seq</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
@@ -804,16 +805,17 @@
 <p id='t362' class='pln'><span class='strut'>&nbsp;</span></p>
 <p id='t363' class='pln'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='com'># Deliver the message</span><span class='strut'>&nbsp;</span></p>
 <p id='t364' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>try</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
-<p id='t365' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>reply</span> <span class='op'>=</span> <span class='nam'>self</span><span class='op'>.</span><span class='nam'>app</span><span class='op'>.</span><span class='nam'>got_message</span><span class='op'>(</span><span class='nam'>msg</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t366' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>except</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
-<p id='t367' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>print</span><span class='op'>(</span><span class='str'>&#39;App crashed when receiving message..&#39;</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t368' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>return</span><span class='strut'>&nbsp;</span></p>
-<p id='t369' class='pln'><span class='strut'>&nbsp;</span></p>
-<p id='t370' class='pln'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='com'># Send reply from app if one was given</span><span class='strut'>&nbsp;</span></p>
-<p id='t371' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>if</span> <span class='nam'>reply</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
-<p id='t372' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>msg</span> <span class='op'>=</span> <span class='nam'>messages</span><span class='op'>.</span><span class='nam'>REPLY</span><span class='op'>.</span><span class='nam'>byte</span> <span class='op'>+</span> <span class='nam'>encode_varint</span><span class='op'>(</span><span class='nam'>self</span><span class='op'>.</span><span class='nam'>s_seq</span><span class='op'>)</span> <span class='op'>+</span> <span class='nam'>reply</span><span class='strut'>&nbsp;</span></p>
-<p id='t373' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>self</span><span class='op'>.</span><span class='nam'>s_seq</span> <span class='op'>+=</span> <span class='num'>1</span><span class='strut'>&nbsp;</span></p>
-<p id='t374' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>return</span> <span class='nam'>self</span><span class='op'>.</span><span class='nam'>send</span><span class='op'>(</span><span class='nam'>msg</span> <span class='op'>+</span> <span class='nam'>self</span><span class='op'>.</span><span class='nam'>get_mac</span><span class='op'>(</span><span class='nam'>msg</span><span class='op'>)</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t365' class='pln'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='com'># TODO: Test that this is correctly received by the app</span><span class='strut'>&nbsp;</span></p>
+<p id='t366' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>reply</span> <span class='op'>=</span> <span class='nam'>self</span><span class='op'>.</span><span class='nam'>app</span><span class='op'>.</span><span class='nam'>got_message</span><span class='op'>(</span><span class='nam'>msg</span><span class='op'>[</span><span class='nam'>len</span><span class='op'>(</span><span class='nam'>seqnum_bytes</span><span class='op'>)</span><span class='op'>:</span><span class='op'>]</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t367' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>except</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
+<p id='t368' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>print</span><span class='op'>(</span><span class='str'>&#39;App crashed when receiving message..&#39;</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t369' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>return</span><span class='strut'>&nbsp;</span></p>
+<p id='t370' class='pln'><span class='strut'>&nbsp;</span></p>
+<p id='t371' class='pln'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='com'># Send reply from app if one was given</span><span class='strut'>&nbsp;</span></p>
+<p id='t372' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>if</span> <span class='nam'>reply</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
+<p id='t373' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>msg</span> <span class='op'>=</span> <span class='nam'>messages</span><span class='op'>.</span><span class='nam'>REPLY</span><span class='op'>.</span><span class='nam'>byte</span> <span class='op'>+</span> <span class='nam'>encode_varint</span><span class='op'>(</span><span class='nam'>self</span><span class='op'>.</span><span class='nam'>s_seq</span><span class='op'>)</span> <span class='op'>+</span> <span class='nam'>reply</span><span class='strut'>&nbsp;</span></p>
+<p id='t374' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>self</span><span class='op'>.</span><span class='nam'>s_seq</span> <span class='op'>+=</span> <span class='num'>1</span><span class='strut'>&nbsp;</span></p>
+<p id='t375' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>return</span> <span class='nam'>self</span><span class='op'>.</span><span class='nam'>send</span><span class='op'>(</span><span class='nam'>msg</span> <span class='op'>+</span> <span class='nam'>self</span><span class='op'>.</span><span class='nam'>get_mac</span><span class='op'>(</span><span class='nam'>msg</span><span class='op'>)</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
                 
             </td>
         </tr>
