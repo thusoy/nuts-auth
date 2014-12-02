@@ -76,8 +76,7 @@ class AuthChannel(object):
             del self.sessions[message.source]
         if session.state == ServerState.rekey_confirmed:
             print('Rekey confirmed, new master key in place, invalidating all existing sessions..')
-            for other_session in self.sessions.values():
-                del self.sessions[other_session.id_b]
+            self.sessions = {}
             print('Session invalidated, shared key updated')
             self.shared_key = session.shared_key
         return response
