@@ -30,11 +30,11 @@ def hkdf_expand(pseudo_random_key, info="", length=32, hash=hashlib.sha512):
     if length > 255 * hash_len:
         raise Exception("Cannot expand to more than 255 * %d = %d bytes using the specified hash function" %\
             (hash_len, 255 * hash_len))
-    blocks_needed = length / hash_len + (0 if length % hash_len == 0 else 1) # ceil
-    okm = ""
-    output_block = ""
+    blocks_needed = length // hash_len + (0 if length % hash_len == 0 else 1) # ceil
+    okm = b""
+    output_block = b""
     for counter in range(blocks_needed):
-        output_block = hmac.new(pseudo_random_key, output_block + info + chr(counter + 1), hash).digest()
+        output_block = hmac.new(pseudo_random_key, output_block + info + bytes(counter + 1), hash).digest()
         okm += output_block
     return okm[:length]
 

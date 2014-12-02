@@ -9,6 +9,7 @@ install_requires = [
     'itsdangerous',
     'msgpack-python',
     'pysha3',
+    'six',
 ]
 
 if sys.version_info < (3, 4, 0):

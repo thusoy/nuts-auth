@@ -14,6 +14,7 @@ import os
 import string
 import hashlib
 import sha3
+import six
 
 
 # Store messages passed back and forth for inspection
@@ -34,20 +35,20 @@ def ascii_bin(binstr):
 
 
 def encode_version(version):
-    """ Takes a versino like '1.0' or '2.1' and encodes it into a single byte. """
-    major, minor = map(int, version.split('.'))
+    """ Takes a version like '1.0' or '2.1' and encodes it into a single byte. """
+    major, minor = map(int, version.split(b'.'))
     if not (0 < major < 16 and 0 <= minor < 16):
         raise ValueError("Can't encode version %s, major or minor version outside range(0, 16)" % version)
-    return chr(major << 4 | minor)
+    return six.int2byte(major << 4 | minor)
 
 
 def decode_version(version):
     """ Takes a byte version and decodes it into human-readable <major>.<minor> format. """
     if len(version) != 1:
-        raise ValueError('%s is an invalid version specifier.' % version)
-    major = ord(version) >> 4
-    minor = ord(version) & 15
-    return '%d.%d' % (major, minor)
+        raise ValueError("Can only decode a single byte!")
+    major = six.byte2int(version) >> 4
+    minor = six.byte2int(version) & 15
+    return ('%d.%d' % (major, minor)).encode('ascii')
 
 
 def send(dest, msg):
@@ -79,11 +80,11 @@ class AuthChannel(object):
     #: MACs supported by this satellite/server. Used in the SA negotiation, should be ordered
     #: by preference (strength).
     supported_macs = [
-        'sha3_512',
-        'sha3_384',
-        'sha3_256',
-        'hmac-sha1',
-        'hmac-sha256',
+        b'sha3_512',
+        b'sha3_384',
+        b'sha3_256',
+        b'hmac-sha1',
+        b'hmac-sha256',
     ]
 
     def __init__(self, shared_key):
@@ -112,7 +113,7 @@ class Session(object):
     #: Version of the protocol supported. Client version is sent in the first
     #: CLIENT_HELLO message, if incompatible a VERSION_NOT_SUPPORTED message
     #: will be replied.
-    version = '1.0'
+    version = b'1.0'
 
     def __init__(self, id_b, shared_key):
         self.id_b = id_b
@@ -132,7 +133,7 @@ class Session(object):
             handler_name = 'respond_to_' + message_name.lower()
             handler = getattr(self, handler_name)
             print('Adding handler for 0x%s: %s' % (binascii.hexlify(message.byte), handler_name))
-            self.handlers[message.byte] = handler
+            self.handlers[six.byte2int(message.byte)] = handler
 
 
     def handle(self, message):
@@ -141,14 +142,16 @@ class Session(object):
 
         Call the correct handler with the first byte of the message stripped.
         """
-        msg_type_byte = message[0]
-        valid_transitions = {
-            ServerState.inactive: [messages.CLIENT_HELLO.byte],
-            ServerState.wait_for_sa_proposal: [messages.SA_PROPOSAL.byte]
+        msg_type_byte = six.byte2int(message)
+        transition_map = {
+            ServerState.inactive: [six.byte2int(messages.CLIENT_HELLO.byte)],
+            ServerState.wait_for_sa_proposal: [six.byte2int(messages.SA_PROPOSAL.byte)]
         }
 
+
         # Filter out messages sent that's not valid in the current state
-        if not msg_type_byte in valid_transitions.get(self.state):
+        valid_types = transition_map.get(self.state, [])
+        if not msg_type_byte in valid_types:
             print('Invalid state transition')
             return
 
@@ -161,16 +164,17 @@ class Session(object):
         8 bytes challenge, and a H_k(id_a, id_b, R_a) truncated to 8 bytes.
         """
         # Verify that incoming packet has correct length
-        if not len('\x00' + message) == 18:
+        if not len(b'\x00' + message) == 18:
             return
 
         # Verify incoming MAC
-        expected_mac = self.mac('\x00' + message[:-8])
+        expected_mac = self.mac(b'\x00' + message[:-8])
         if not constant_time_compare(expected_mac, message[-8:]):
             return
 
         # Check that version is supported
-        client_version = decode_version(message[0])
+        client_version = decode_version(message[:1])
+        #from nose.tools import set_trace as f; f()
         if not client_version == self.version:
             # reply with supported version, and copy of client's message
             return self.send(messages.VERSION_NOT_SUPPORTED.byte +
@@ -213,7 +217,7 @@ class Session(object):
 
         # Verify MAC
         msg, sig = message[:-8], message[-8:]
-        if not constant_time_compare(self.mac('\x01' + msg + self.R_a), sig):
+        if not constant_time_compare(self.mac(b'\x01' + msg + self.R_a), sig):
             print('Invalid signature')
             return
 
@@ -227,21 +231,22 @@ class Session(object):
                 return
 
         # Verify that key 'macs' is a list
-        if not isinstance(msg_data.get('macs', []), list):
+        if not isinstance(msg_data.get(b'macs', []), list):
             print('Not list')
             return
 
         # Merge client parameters with defaults
-        suggested_macs = set(['sha3_256'] + msg_data.get('macs', []))
+        suggested_macs = set([b'sha3_256'] + msg_data.get(b'macs', []))
 
         # Pick the first MAC from supported_macs that's supported by both parties
+        selected_mac = b'sha3_256'
         for supported_mac in AuthChannel.supported_macs:
             if supported_mac in suggested_macs:
                 selected_mac = supported_mac
                 break
 
         # Verify that suggested MAC length is valid int
-        suggested_mac_len = msg_data.get('mac_len', 8)
+        suggested_mac_len = msg_data.get(b'mac_len', 8)
         if not isinstance(suggested_mac_len, int):
             print('mac_len not int')
             return
@@ -258,7 +263,7 @@ class Session(object):
             'mac': selected_mac,
             'mac_len': suggested_mac_len,
         }
-        response = '\x81' + msgpack.dumps(sa)
+        response = messages.SA.byte + msgpack.dumps(sa)
         response = self.send(response + self.mac(response))
 
         self.sa_mac_len = suggested_mac_len
