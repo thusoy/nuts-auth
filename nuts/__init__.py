@@ -204,7 +204,7 @@ class Session(object):
         # Verify MAC
         msg, sig = message[:-8], message[-8:]
         if not constant_time_compare(self.mac(b'\x01' + msg + self.R_a), sig):
-            print('Invalid signature')
+            print('Invalid mac on sa proposal')
             return
 
         msg_data = {}

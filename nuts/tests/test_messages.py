@@ -20,21 +20,24 @@ class BaseMessageTestCase(unittest.TestCase):
         self.assertEqual(six.byte2int(response), expected_type)
 
 
-    def get_mac(self, *args):
-        algo = getattr(hashlib, self.mac)
+
+    def get_mac(self, *args, **kwargs):
+        algo = kwargs.get('algo', self.mac)
+        length = kwargs.get('length', self.mac_len)
+        hash = getattr(hashlib, algo)
         if hasattr(self, 'session_key'):
             key = self.session_key
         else:
             key = self.shared_secret
-        return algo(key + b''.join(args)).digest()[:self.mac_len]
+        return hash(key + b''.join(args)).digest()[:length]
 
 
     def get_response(self, msg):
         return self.channel.receive(Message('source', msg))
 
 
-    def send_with_mac(self, msg):
-        mac = self.get_mac(msg)
+    def send_with_mac(self, msg, **kwargs):
+        mac = self.get_mac(msg, **kwargs)
         return self.get_response(msg + mac)
 
 
@@ -59,11 +62,11 @@ class EstablishedSessionTestCase(BaseMessageTestCase):
         # Put channel in established state
         self.R_b = b'\x00'*8
         msg = b'\x00\x10' + self.R_b
-        response = self.send_with_mac(msg)
+        response = self.send_with_mac(msg, algo='sha3_256', length=8)
         self.R_a = response.msg[1:9]
         msg = b'\x01' + msgpack.dumps({'macs': [self.mac], 'mac_len': self.mac_len})
-        sig = self.get_mac(msg, self.R_a)
-        self.get_response(msg + sig)
+        mac = self.get_mac(msg, self.R_a, algo='sha3_256', length=8)
+        self.get_response(msg + mac)
         self.session_key = HKDF(self.R_a + self.R_b, self.shared_secret).expand(b'1.0', length=16)
 
 
@@ -316,3 +319,10 @@ class RekeyTest(EstablishedSessionTestCase):
         self.assertCorrectMAC(response)
         self.assertMessageType(response, 0x84)
         self.assertEqual(self.session_key, self.channel.shared_key)
+
+
+class NonDefaultParametersSessionTest(CommandTest):
+    """ Re-run all the command tests with non-default mac and mac_len. """
+
+    mac = 'sha3_512'
+    mac_len = 16
