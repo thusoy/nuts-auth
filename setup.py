@@ -12,8 +12,18 @@ install_requires = [
     'six',
 ]
 
+extras_require = {
+    'test': [
+        'coverage',
+        'nose',
+    ],
+}
+
 if sys.version_info < (3, 4, 0):
     install_requires.append('enum34')
+
+if sys.version_info < (3, 3, 0):
+    extras_require['test'].append('mock')
 
 setup(
     name='nuts',
@@ -24,10 +34,6 @@ setup(
     description='An authenticated datagram protocol. That might fly in space.',
     install_requires=install_requires,
     extras_require={
-        'test': [
-            'coverage',
-            'nose',
-        ],
     },
     packages=find_packages(),
     zip_safe=False,

@@ -3,6 +3,7 @@ from __future__ import print_function
 from . import messages
 from .hkdf import HKDF
 from .utils import ascii_bin, decode_version, encode_version, mac
+from .varint import encode_varint, decode_varint
 
 from collections import namedtuple
 from itsdangerous import constant_time_compare
@@ -44,10 +45,19 @@ class AuthChannel(object):
         b'hmac-sha256',
     ]
 
-    def __init__(self, shared_key):
+    def __init__(self, shared_key, app=None):
         """ Create a new auth channel context to keep around. """
         self.shared_key = shared_key
         self.sessions = {}
+        self.app = app
+
+
+    def set_app(self, app):
+        self.app = app
+
+        # Update app for all existing sessions
+        for session in self.sessions.values():
+            session.set_app(app)
 
 
     def receive(self, message):
@@ -55,7 +65,7 @@ class AuthChannel(object):
         if message.source in self.sessions:
             session = self.sessions.get(message.source)
         else:
-            session = Session(message.source, self.shared_key)
+            session = Session(message.source, self.shared_key, self.app)
             self.sessions[message.source] = session
         response = session.handle(message.msg)
         if session.state == ServerState.inactive:
@@ -72,10 +82,11 @@ class Session(object):
     #: will be replied.
     version = b'1.0'
 
-    def __init__(self, id_b, shared_key):
+    def __init__(self, id_b, shared_key, app):
         self.id_b = id_b
         self.shared_key = shared_key
         self.state = ServerState.inactive
+        self.app = app
 
         # Setup self.handlers dict
         self.handlers = {}
@@ -93,6 +104,10 @@ class Session(object):
             self.handlers[six.byte2int(message.byte)] = handler
 
 
+    def set_app(self, app):
+        self.app = app
+
+
     def handle(self, message):
         """ Message has been received from client. It's assumed here that the link layer
         has filtered out messages not intended for us, or that has bit-errors.
@@ -102,7 +117,12 @@ class Session(object):
         msg_type_byte = six.byte2int(message)
         transition_map = {
             ServerState.inactive: [six.byte2int(messages.CLIENT_HELLO.byte)],
-            ServerState.wait_for_sa_proposal: [six.byte2int(messages.SA_PROPOSAL.byte)]
+            ServerState.wait_for_sa_proposal: [six.byte2int(messages.SA_PROPOSAL.byte)],
+            ServerState.established: [
+                six.byte2int(messages.COMMAND.byte),
+                six.byte2int(messages.REKEY.byte),
+                six.byte2int(messages.CLIENT_TERMINATE.byte),
+            ],
         }
 
 
@@ -223,11 +243,13 @@ class Session(object):
         response = messages.SA.byte + msgpack.dumps(sa)
         response = self.send(response + self.mac(response))
 
+        self.sa_mac = selected_mac.decode('ascii')
         self.sa_mac_len = suggested_mac_len
-        self.sa_mac = selected_mac
 
         # Initialize sequence numbers
-        self.c_seq = self.s_seq = 1
+        self.c_seq = self.s_seq = 0
+
+        self.state = ServerState.established
 
         return response
 
@@ -255,9 +277,47 @@ class Session(object):
 
     def respond_to_command(self, message):
         """Signed, operational command received. Verify signature and return message."""
-        msg, sig = message[:-self.sa_mac_len], message[-self.sa_mac_len:]
-        if not constant_time_compare(sig, self.mac('\x02' + msg + str(self.c_seq))):
-            raise SignatureException()
+        # Verify length
+        if not self.sa_mac_len <= len(message) <= 2**16:
+            print('Invalid length of message, was %s' % len(message))
+            return
 
-        # Perform command and send response
-        #send(self)
+        # Verify MAC
+        msg, sig = message[:-self.sa_mac_len], message[-self.sa_mac_len:]
+        if not constant_time_compare(sig, self.mac(b'\x02' + msg)):
+            print('Invalid mac')
+            return
+
+        # Verify sequence number
+        seqnum_bytes = []
+        for byte in six.iterbytes(msg):
+            seqnum_bytes.append(byte)
+            if byte >> 7 == 0:
+                break
+        client_seqnum = decode_varint(seqnum_bytes)
+        if not client_seqnum == self.c_seq:
+            print('Not expected sequence number, expected %d, was %d' % (self.c_seq, client_seqnum))
+            # TODO: If future sequence number, either store it or deliver it to app immediately,
+            # depending on config
+            return
+
+        # Check that we have an app to receive the message
+        if not hasattr(self, 'app') or not self.app:
+            print('No app set to receive messages')
+            return
+
+        # Increase expected sequence number
+        self.c_seq += 1
+
+        # Deliver the message
+        try:
+            reply = self.app.got_message(msg)
+        except:
+            print('App crashed when receiving message..')
+            return
+
+        # Send reply from app if one was given
+        if reply:
+            msg = encode_varint(self.s_seq) + reply
+            self.s_seq += 1
+            return self.send(msg + self.mac(msg))

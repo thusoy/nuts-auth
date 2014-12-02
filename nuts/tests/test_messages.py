@@ -7,6 +7,12 @@ import msgpack
 from nuts import AuthChannel, Message
 from nuts.hkdf import HKDF
 
+try:
+    from unittest import mock
+except ImportError:
+    # Python 2
+    import mock
+
 class ClientHelloTest(unittest.TestCase):
 
     def setUp(self):
@@ -170,6 +176,69 @@ class SAProposalTest(unittest.TestCase):
     def test_sa_proposal_invalid_type(self):
         msg = b'\x00'
         sig = hashlib.sha3_256(self.shared_secret + msg + self.R_a).digest()[:8]
+        response = self.channel.receive(Message('source', msg + sig))
+        self.assertIsNone(response)
+
+
+class CommandTest(unittest.TestCase):
+
+    def setUp(self):
+        self.shared_secret = b'secret'
+
+        class TestApp(mock.Mock):
+
+            def got_message(self, message):
+                return b'Hello, earthlings'
+
+        self.app = TestApp()
+        self.channel = AuthChannel(self.shared_secret, app=self.app)
+
+        # Put channel in established state
+        self.R_b = b'\x00'*8
+        msg = b'\x00\x10' + self.R_b
+        sig = hashlib.sha3_256(self.shared_secret + msg).digest()[:8]
+        response = self.channel.receive(Message('source', msg + sig))
+        self.R_a = response.msg[1:9]
+        msg = b'\x01'
+        sig = hashlib.sha3_256(self.shared_secret + msg + self.R_a).digest()[:8]
+        self.channel.receive(Message('source', msg + sig))
+        self.session_key = HKDF(self.R_a + self.R_b, self.shared_secret).expand(b'1.0', length=16)
+
+
+    def test_command(self):
+        msg = b'\x02\x00' + b'Hello, space'
+        sig = hashlib.sha3_256(self.session_key + msg).digest()[:8]
+        response = self.channel.receive(Message('source', msg + sig)).msg
+        expected_mac = hashlib.sha3_256(self.session_key + response[:-8]).digest()[:8]
+        self.assertEqual(response[-8:], expected_mac)
+        seq_num = six.byte2int(response)
+        self.assertEqual(seq_num, 0)
+        self.assertEqual(response[1:-8], b'Hello, earthlings')
+
+        # second command should have different seqnums
+        msg = b'\x02\x01' + b'Hello again!'
+        sig = hashlib.sha3_256(self.session_key + msg).digest()[:8]
+        response = self.channel.receive(Message('source', msg + sig)).msg
+        expected_mac = hashlib.sha3_256(self.session_key + response[:-8]).digest()[:8]
+        self.assertEqual(response[-8:], expected_mac)
+        seq_num = six.byte2int(response)
+        self.assertEqual(seq_num, 1)
+        self.assertEqual(response[1:-8], b'Hello, earthlings')
+
+
+    def test_command_replay(self):
+        msg = b'\x02\x00' + b'Hello, space'
+        sig = hashlib.sha3_256(self.session_key + msg).digest()[:8]
+        response = self.channel.receive(Message('source', msg + sig)).msg
+        expected_mac = hashlib.sha3_256(self.session_key + response[:-8]).digest()[:8]
+        self.assertEqual(response[-8:], expected_mac)
+        seq_num = six.byte2int(response)
+        self.assertEqual(seq_num, 0)
+        self.assertEqual(response[1:-8], b'Hello, earthlings')
+
+        # replay first message
+        msg = b'\x02\x00' + b'Hello again!'
+        sig = hashlib.sha3_256(self.session_key + msg).digest()[:8]
         response = self.channel.receive(Message('source', msg + sig))
         self.assertIsNone(response)
 
