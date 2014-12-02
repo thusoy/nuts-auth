@@ -336,6 +336,27 @@ class RekeyTest(EstablishedSessionTestCase):
         self.assertIsNone(response)
 
 
+    def test_rekey_confirm_invalid_length(self):
+        msg = b'\x03' + b'\x00'*32
+        response = self.send_with_mac(msg).msg
+        self.assertMessageType(response, 0x83)
+
+        msg = b'\x04\x00'
+        response = self.send_with_mac(msg)
+        self.assertIsNone(response)
+
+
+    def test_rekey_confirm_invalid_mac(self):
+        msg = b'\x03' + b'\x00'*32
+        response = self.send_with_mac(msg).msg
+        self.assertMessageType(response, 0x83)
+
+        msg = b'\x04'
+        mac = b'\x00'*self.mac_len
+        response = self.get_response(msg + mac)
+        self.assertIsNone(response)
+
+
 class NonDefaultParametersSessionTest(CommandTest, RekeyTest):
     """ Re-run all the tests from established state with non-default mac and mac_len. """
 
