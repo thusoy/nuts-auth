@@ -107,9 +107,9 @@ NtRp39
 g18
 I1
 sg19
-I65
+I63
 sg20
-I212
+I211
 sg21
 I0
 sg22
@@ -119,7 +119,7 @@ I13
 sg24
 I7
 sbssg25
-S'\x93\xb4\xd8\x14\xb5Wh\xb6\xa3@Z\xb9\x1c\xaf\xe8\xa9'
+S'\\=\xa3gn\r@j\xce\xf2\x17{\x01F\x9e '
 p41
 ssS'nuts_varint'
 p42
