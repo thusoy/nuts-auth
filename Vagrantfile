@@ -7,7 +7,7 @@ $provision_script = <<EOF
 apt-get update
 apt-get install python-dev python-pip libffi-dev -y
 pip install git+https://github.com/pyca/pynacl
-pip install -e /vagrant
+pip install -e /vagrant[test]
 EOF
 
 
