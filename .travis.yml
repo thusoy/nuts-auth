@@ -7,7 +7,7 @@ python:
 install:
   - sudo apt-get install -y libffi-dev
   - pip install git+https://github.com/pyca/pynacl
-  - pip install .
+  - pip install -e .[test]
 
 script:
   - nosetests --with-coverage --cover-branches --cover-html --cover-package nuts

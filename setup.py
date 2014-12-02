@@ -22,6 +22,12 @@ setup(
     url='https://github.com/thusoy/nuts-auth',
     description='An authenticated datagram protocol. That might fly in space.',
     install_requires=install_requires,
+    extras_require={
+        'test': [
+            'coverage',
+            'nose',
+        ],
+    },
     packages=find_packages(),
     zip_safe=False,
 )
