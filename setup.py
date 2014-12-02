@@ -12,9 +12,10 @@ setup(
     url='https://github.com/thusoy/nuts-auth',
     description='An authenticated datagram protocol. That might fly in space.',
     install_requires=[
-        'pysha3',
+        'enum34',
         'itsdangerous',
         'msgpack-python',
+        'pysha3',
     ],
     packages=find_packages(),
     zip_safe=False,

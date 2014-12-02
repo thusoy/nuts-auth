@@ -39,7 +39,7 @@ def hkdf_expand(pseudo_random_key, info="", length=32, hash=hashlib.sha512):
     return okm[:length]
 
 
-class Hkdf(object):
+class HKDF(object):
     '''
     Wrapper class for HKDF extract and expand functions
     '''

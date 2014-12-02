@@ -1,8 +1,9 @@
 from . import messages
-from .hkdf import hkdf_expand
+from .hkdf import HKDF
 
 from collections import namedtuple
 from itsdangerous import constant_time_compare
+from enum import Enum
 from functools import partial
 import msgpack
 import binascii
@@ -15,15 +16,16 @@ import sha3
 
 # Store messages passed back and forth for inspection
 Message = namedtuple('Message', ['source', 'msg'])
-#class Message(object):
-#
-#    def __init__(self, source, raw_msg):
-#        self.raw_msg = raw_msg
-#        self.source = source
 
 _messages = []
-_packer = msgpack.Packer(use_bin_type=True)
-_unpacker = msgpack.Unpacker()
+
+
+class ServerState(Enum):
+    inactive = 1
+    wait_for_sa_proposal = 2
+    established = 3
+    rekey = 4
+
 
 def ascii_bin(binstr):
     return repr(quopri.encodestring(binstr))
@@ -96,7 +98,7 @@ class AuthChannel(object):
             session = Session(message.source, self.shared_key)
             self.sessions[message.source] = session
         response = session.handle(message.msg)
-        if session.terminate:
+        if session.state == ServerState.inactive:
             print 'Terminating session with %s' % message.source
             del self.sessions[message.source]
         return response
@@ -113,7 +115,7 @@ class Session(object):
     def __init__(self, id_b, shared_key):
         self.id_b = id_b
         self.shared_key = shared_key
-        self.terminate = False
+        self.state = ServerState.inactive
 
         # Setup self.handlers dict
         self.handlers = {}
@@ -127,8 +129,6 @@ class Session(object):
                 continue
             handler_name = 'respond_to_' + message_name.lower()
             handler = getattr(self, handler_name)
-            if not handler:
-                raise ValueError('Connection implementation does not support messages of type 0x%s' % binascii.hexlify(message.byte))
             print 'Adding handler for 0x%s: %s' % (binascii.hexlify(message.byte), handler_name)
             self.handlers[message.byte] = handler
 
@@ -136,15 +136,22 @@ class Session(object):
     def handle(self, message):
         """ Message has been received from client. It's assumed here that the link layer
         has filtered out messages not intended for us, or that has bit-errors.
+
+        Call the correct handler with the first byte of the message stripped.
         """
         msg_type_byte = message[0]
-        handler = self.handlers.get(msg_type_byte, self.not_implemented)
+        valid_transitions = {
+            ServerState.inactive: [messages.CLIENT_HELLO.byte],
+            ServerState.wait_for_sa_proposal: [messages.SA_PROPOSAL.byte]
+        }
+
+        # Filter out messages sent that's not valid in the current state
+        if not msg_type_byte in valid_transitions.get(self.state):
+            print 'Invalid state transition'
+            return
+
+        handler = self.handlers[msg_type_byte]
         return handler(message[1:])
-
-
-    def not_implemented(self, message):
-        self.terminate = True
-        return self.send(messages.MESSAGE_TYPE_NOT_SUPPORTED.byte)
 
 
     def respond_to_client_hello(self, message):
@@ -175,6 +182,7 @@ class Session(object):
         msg = messages.SERVER_HELLO.byte + self.R_a
         h = self.mac(msg + self.R_b)
         msg = msg + h
+        self.state = ServerState.wait_for_sa_proposal
         return self.send(msg)
 
 
@@ -191,43 +199,68 @@ class Session(object):
 
 
     def respond_to_client_terminate(self, message):
-        self.terminate = True
+        self.state = ServerState.inactive
         raise NotImplemented()
 
 
     def respond_to_sa_proposal(self, message):
+        # Verify length
+        if not 8 <= len(message) <= 255:
+            print 'Invalid length', len(message)
+            return
+
+        # Verify MAC
         msg, sig = message[:-8], message[-8:]
         if not constant_time_compare(self.mac('\x01' + msg + self.R_a), sig):
-            raise SignatureException()
+            print 'Invalid signature'
+            return
 
-        msg_data = _unpacker.unpack(msg)
-        suggested_macs = set(msg_data.get('macs', []))
+        msg_data = {}
+
+        # Verify msgpacked data is valid (has 'macs' which is a list)
+        if msg:
+            try:
+                msg_data = msgpack.loads(msg)
+            except ValueError:
+                return
+
+        # Verify that key 'macs' is a list
+        if not isinstance(msg_data.get('macs', []), list):
+            print 'Not list'
+            return
+
+        # Merge client parameters with defaults
+        suggested_macs = set(['sha3_256'] + msg_data.get('macs', []))
+
         # Pick the first MAC from supported_macs that's supported by both parties
         for supported_mac in AuthChannel.supported_macs:
             if supported_mac in suggested_macs:
                 selected_mac = supported_mac
                 break
-        else:
-            raise "No MACs in common, aborting"
+
+        # Verify that suggested MAC length is valid int
         suggested_mac_len = msg_data.get('mac_len', 8)
-        try:
-            suggested_mac_len = int(suggested_mac_len)
-        except ValueError:
-            raise ValueError("Suggested mac_len not an integer, was %s" % suggested_mac_len)
-        if not (8 <= suggested_mac_len <= 32):
-            raise ValueError("suggested mac outside permitted range of 8-32 bytes")
+        if not isinstance(suggested_mac_len, int):
+            print 'mac_len not int'
+            return
+        if not (4 <= suggested_mac_len <= 32):
+            print "suggested mac outside permitted range of 8-32 bytes"
+            return
+
         # All jolly good, notify id_b of chosen MAC and signature length
-        response = {
+
+        # Expand session key
+        self.session_key = HKDF(self.R_a + self.R_b, self.shared_key).expand(self.version, length=16)
+
+        sa = {
             'mac': selected_mac,
             'mac_len': suggested_mac_len,
         }
-        response_msg = '\x81' + _packer.pack(response)
-        response = self.send(response_msg + self.mac(response_msg + self.R_a + self.R_b))
+        response = '\x81' + msgpack.dumps(sa)
+        response = self.send(response + self.mac(response))
+
         self.sa_mac_len = suggested_mac_len
         self.sa_mac = selected_mac
-
-        # Expand session key
-        self.session_key = hkdf_expand(self.shared_key + self.R_a + self.R_b, length=16)
 
         # Initialize sequence numbers
         self.c_seq = self.s_seq = 1

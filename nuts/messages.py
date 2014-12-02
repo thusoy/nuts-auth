@@ -19,7 +19,7 @@ CLIENT_TERMINATE           = _ProtocolMessage('\x0f', 'Client is terminating the
 # Server messages
 SERVER_HELLO               = _ProtocolMessage('\x80', 'First response from server, responds to client challenge and challenges client')
 SA                         = _ProtocolMessage('\x81', 'Negotiated security association from server.')
-REPLY                      = _ProtocolMessage('\x82', 'Reply to command issues by client.')
+REPLY                      = _ProtocolMessage('\x82', 'Reply to command issued by client.')
 REKEY_RESPONSE             = _ProtocolMessage('\x83', 'Respond to re-key command with satellites public key')
 REKEY_COMPLETED            = _ProtocolMessage('\x84', 'Complete the re-keying by invalidating all existing sessions and ')
 VERSION_NOT_SUPPORTED      = _ProtocolMessage('\x83', 'Version suggested by client is not supported by server.')
