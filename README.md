@@ -3,6 +3,8 @@ nuts-auth [![Build Status](https://travis-ci.org/thusoy/nuts-auth.svg?branch=mas
 
 Experiments for my project on authenticating a radio uplink to the NUTS cubesat.
 
+[Code coverage](http://thusoy.github.io/nuts-auth)
+
 RPi setup
 =========
 
