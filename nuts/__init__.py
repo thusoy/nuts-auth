@@ -2,6 +2,7 @@ from __future__ import print_function
 
 from . import messages
 from .hkdf import HKDF
+from .utils import ascii_bin, decode_version, encode_version, mac
 
 from collections import namedtuple
 from itsdangerous import constant_time_compare
@@ -9,18 +10,13 @@ from enum import Enum
 from functools import partial
 import msgpack
 import binascii
-import quopri
 import os
 import string
-import hashlib
-import sha3
 import six
 
 
-# Store messages passed back and forth for inspection
+# The main message class that the AuthChannel operate on
 Message = namedtuple('Message', ['source', 'msg'])
-
-_messages = []
 
 
 class ServerState(Enum):
@@ -30,49 +26,10 @@ class ServerState(Enum):
     rekey = 4
 
 
-def ascii_bin(binstr):
-    return repr(quopri.encodestring(binstr))
-
-
-def encode_version(version):
-    """ Takes a version like '1.0' or '2.1' and encodes it into a single byte. """
-    major, minor = map(int, version.split(b'.'))
-    if not (0 < major < 16 and 0 <= minor < 16):
-        raise ValueError("Can't encode version %s, major or minor version outside range(0, 16)" % version)
-    return six.int2byte(major << 4 | minor)
-
-
-def decode_version(version):
-    """ Takes a byte version and decodes it into human-readable <major>.<minor> format. """
-    if len(version) != 1:
-        raise ValueError("Can only decode a single byte!")
-    major = six.byte2int(version) >> 4
-    minor = six.byte2int(version) & 15
-    return ('%d.%d' % (major, minor)).encode('ascii')
-
-
 def send(dest, msg):
     print('Sending msg of length %d to %s: %s' % (len(msg), dest, ascii_bin(msg)))
     msg = Message(dest, msg)
-    _messages.append(msg)
     return msg
-
-
-def mac(key, msg, algo='sha3_256', mac_len=8):
-    """ Create a secure MAC of the message with the key, using
-    Keccak (SHA-3) 256 truncated to 64 bits.
-    """
-    print('MACing %s with key %s (%d)' % (repr(quopri.encodestring(msg)), repr(quopri.encodestring(key)), len(key)))
-    hash_func = getattr(hashlib, algo)
-    return hash_func(key + msg).digest()[:mac_len]
-
-
-class NUTSAuthException(Exception):
-    """ Base class for authentication-related exception in the auth channel. """
-
-
-class SignatureException(NUTSAuthException):
-    """ Invalid signature received. """
 
 
 class AuthChannel(object):
