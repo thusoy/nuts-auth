@@ -362,7 +362,8 @@ class Session(object):
 
         # Deliver the message
         try:
-            reply = self.app.got_message(msg)
+            # TODO: Test that this is correctly received by the app
+            reply = self.app.got_message(msg[len(seqnum_bytes):])
         except:
             print('App crashed when receiving message..')
             return
