@@ -228,8 +228,8 @@ class CommandTest(EstablishedSessionTestCase):
     def test_command(self):
         msg = b'\x02\x00' + b'Hello, space'
         response = self.send_with_mac(msg).msg
-        self.assertMessageType(response, 0x82)
         self.assertCorrectMAC(response)
+        self.assertMessageType(response, 0x82)
         seq_num = six.byte2int(response[1:])
         self.assertEqual(seq_num, 0)
         self.assertEqual(response[2:-self.mac_len], b'Hello, earthlings')
@@ -241,6 +241,13 @@ class CommandTest(EstablishedSessionTestCase):
         seq_num = six.byte2int(response[1:])
         self.assertEqual(seq_num, 1)
         self.assertEqual(response[2:-self.mac_len], b'Hello, earthlings')
+
+
+    def test_command_multibyte_sequence_number(self):
+        msg = b'\x02\x80\x80\x00' + b'Hello, space'
+        response = self.send_with_mac(msg).msg
+        self.assertCorrectMAC(response)
+        self.assertMessageType(response, 0x82)
 
 
     def test_command_invalid_type(self):
