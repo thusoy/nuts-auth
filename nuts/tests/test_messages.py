@@ -230,7 +230,7 @@ class CommandTest(EstablishedSessionTestCase):
         response = self.send_with_mac(msg).msg
         self.assertMessageType(response, 0x82)
         self.assertCorrectMAC(response)
-        seq_num = six.byte2int(response[1])
+        seq_num = six.byte2int(response[1:])
         self.assertEqual(seq_num, 0)
         self.assertEqual(response[2:-self.mac_len], b'Hello, earthlings')
 
@@ -238,7 +238,7 @@ class CommandTest(EstablishedSessionTestCase):
         msg = b'\x02\x01' + b'Hello again!'
         response = self.send_with_mac(msg).msg
         self.assertCorrectMAC(response)
-        seq_num = six.byte2int(response[1])
+        seq_num = six.byte2int(response[1:])
         self.assertEqual(seq_num, 1)
         self.assertEqual(response[2:-self.mac_len], b'Hello, earthlings')
 
@@ -254,7 +254,8 @@ class CommandTest(EstablishedSessionTestCase):
         msg = b'\x02\x00' + b'Hello, space'
         response = self.send_with_mac(msg).msg
         self.assertCorrectMAC(response)
-        seq_num = six.byte2int(response[1])
+        print('Response: %s' % ascii_bin(response))
+        seq_num = six.byte2int(response[1:])
         self.assertEqual(seq_num, 0)
         self.assertEqual(response[2:-self.mac_len], b'Hello, earthlings')
 
