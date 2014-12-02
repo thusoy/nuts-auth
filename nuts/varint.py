@@ -1,4 +1,12 @@
-import sys
+"""
+    Helper module for working with variable-sized byte representations of
+    integers.
+
+    Integers < 128 will be encoded using 1 byte, then one byte more for each
+    7 bits that needs to be added.
+
+    MSB can be used to detect whether more bytes follow or not.
+"""
 
 def encode_varint(i):
     """ Encode a positiv integer to a variable length byte string. """
@@ -18,14 +26,3 @@ def decode_varint(s):
     for exp, c in enumerate(reversed(s)):
         res += (ord(c) & 127)<<(exp*7)
     return res
-
-
-if __name__ == '__main__':
-    i = int(sys.argv[1], 10)
-    var = encode_varint(i)
-    print i, var.encode('hex'), decode_varint(var)
-    i = 1
-    while True:
-        var = encode_varint(i)
-        print i, var.encode('hex'), decode_varint(var)
-        i += 1

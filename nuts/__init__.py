@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from . import messages
 from .hkdf import HKDF
 
@@ -49,7 +51,7 @@ def decode_version(version):
 
 
 def send(dest, msg):
-    print 'Sending msg of length %d to %s: %s' % (len(msg), dest, ascii_bin(msg))
+    print('Sending msg of length %d to %s: %s' % (len(msg), dest, ascii_bin(msg)))
     msg = Message(dest, msg)
     _messages.append(msg)
     return msg
@@ -59,7 +61,7 @@ def mac(key, msg, algo='sha3_256', mac_len=8):
     """ Create a secure MAC of the message with the key, using
     Keccak (SHA-3) 256 truncated to 64 bits.
     """
-    print 'MACing %s with key %s (%d)' % (repr(quopri.encodestring(msg)), repr(quopri.encodestring(key)), len(key))
+    print('MACing %s with key %s (%d)' % (repr(quopri.encodestring(msg)), repr(quopri.encodestring(key)), len(key)))
     hash_func = getattr(hashlib, algo)
     return hash_func(key + msg).digest()[:mac_len]
 
@@ -99,7 +101,7 @@ class AuthChannel(object):
             self.sessions[message.source] = session
         response = session.handle(message.msg)
         if session.state == ServerState.inactive:
-            print 'Terminating session with %s' % message.source
+            print('Terminating session with %s' % message.source)
             del self.sessions[message.source]
         return response
 
@@ -129,7 +131,7 @@ class Session(object):
                 continue
             handler_name = 'respond_to_' + message_name.lower()
             handler = getattr(self, handler_name)
-            print 'Adding handler for 0x%s: %s' % (binascii.hexlify(message.byte), handler_name)
+            print('Adding handler for 0x%s: %s' % (binascii.hexlify(message.byte), handler_name))
             self.handlers[message.byte] = handler
 
 
@@ -147,7 +149,7 @@ class Session(object):
 
         # Filter out messages sent that's not valid in the current state
         if not msg_type_byte in valid_transitions.get(self.state):
-            print 'Invalid state transition'
+            print('Invalid state transition')
             return
 
         handler = self.handlers[msg_type_byte]
@@ -206,13 +208,13 @@ class Session(object):
     def respond_to_sa_proposal(self, message):
         # Verify length
         if not 8 <= len(message) <= 255:
-            print 'Invalid length', len(message)
+            print('Invalid length', len(message))
             return
 
         # Verify MAC
         msg, sig = message[:-8], message[-8:]
         if not constant_time_compare(self.mac('\x01' + msg + self.R_a), sig):
-            print 'Invalid signature'
+            print('Invalid signature')
             return
 
         msg_data = {}
@@ -226,7 +228,7 @@ class Session(object):
 
         # Verify that key 'macs' is a list
         if not isinstance(msg_data.get('macs', []), list):
-            print 'Not list'
+            print('Not list')
             return
 
         # Merge client parameters with defaults
@@ -241,10 +243,10 @@ class Session(object):
         # Verify that suggested MAC length is valid int
         suggested_mac_len = msg_data.get('mac_len', 8)
         if not isinstance(suggested_mac_len, int):
-            print 'mac_len not int'
+            print('mac_len not int')
             return
         if not (4 <= suggested_mac_len <= 32):
-            print "suggested mac outside permitted range of 8-32 bytes"
+            print("suggested mac outside permitted range of 8-32 bytes")
             return
 
         # All jolly good, notify id_b of chosen MAC and signature length
