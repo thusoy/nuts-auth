@@ -9,6 +9,8 @@ from collections import namedtuple
 from itsdangerous import constant_time_compare
 from enum import Enum
 from functools import partial
+from nacl.c import crypto_scalarmult
+from nacl.public import PrivateKey
 import msgpack
 import binascii
 import os
@@ -25,6 +27,7 @@ class ServerState(Enum):
     wait_for_sa_proposal = 2
     established = 3
     rekey = 4
+    rekey_confirmed = 5
 
 
 def send(dest, msg):
@@ -71,6 +74,12 @@ class AuthChannel(object):
         if session.state == ServerState.inactive:
             print('Terminating session with %s' % message.source)
             del self.sessions[message.source]
+        if session.state == ServerState.rekey_confirmed:
+            print('Rekey confirmed, new master key in place, invalidating all existing sessions..')
+            for other_session in self.sessions.values():
+                del self.sessions[other_session.id_b]
+            print('Session invalidated, shared key updated')
+            self.shared_key = session.shared_key
         return response
 
 
@@ -100,7 +109,6 @@ class Session(object):
                 continue
             handler_name = 'respond_to_' + message_name.lower()
             handler = getattr(self, handler_name)
-            print('Adding handler for 0x%s: %s' % (binascii.hexlify(message.byte), handler_name))
             self.handlers[six.byte2int(message.byte)] = handler
 
 
@@ -123,6 +131,7 @@ class Session(object):
                 six.byte2int(messages.REKEY.byte),
                 six.byte2int(messages.CLIENT_TERMINATE.byte),
             ],
+            ServerState.rekey: [six.byte2int(messages.REKEY_CONFIRM.byte)],
         }
 
 
@@ -174,7 +183,7 @@ class Session(object):
 
 
     def mac(self, mac_input):
-        """ Shortcut for `mac(self.shared_key, self.id_a, self.id_b, mac_input)."""
+        """ Shortcut for `mac(self.shared_key, mac_input)."""
         mac_len = getattr(self, 'sa_mac_len', 8)
         key = getattr(self, 'session_key', self.shared_key)
         mac_func = getattr(self, 'sa_mac', 'sha3_256')
@@ -255,11 +264,44 @@ class Session(object):
 
 
     def respond_to_rekey(self, message):
-        raise NotImplemented()
+        # Verify length
+        if not len(message) == 32 + self.sa_mac_len:
+            print('Invalid length of rekey')
+            return
+
+        # Verify MAC
+        msg, sig = message[:-self.sa_mac_len], message[-self.sa_mac_len:]
+        expected_mac = self.mac(b'\x03' + msg)
+        if not constant_time_compare(sig, expected_mac):
+            print('Invalid MAC on rekey')
+            return
+
+        client_pubkey = msg
+        pkey = PrivateKey.generate()
+        self.new_master_key = crypto_scalarmult(pkey._private_key, client_pubkey)
+        msg = messages.REKEY_RESPONSE.byte + pkey.public_key._public_key
+        self.state = ServerState.rekey
+        return self.send(msg + self.mac(msg))
 
 
     def respond_to_rekey_confirm(self, message):
-        raise NotImplemented()
+        # Verify length
+        if not len(message) == self.sa_mac_len:
+            print('Invalid length of rekey confirm')
+            return
+
+        # Verify MAC
+        msg, sent_mac = message[:-self.sa_mac_len], message[-self.sa_mac_len:]
+        expected_mac = mac(self.new_master_key, b'\x04', algo=self.sa_mac, mac_len=self.sa_mac_len)
+        if not constant_time_compare(sent_mac, expected_mac):
+            print('Invalid MAC of rekey confirm')
+            return
+
+        # Update shared_key
+        self.shared_key = self.new_master_key
+        msg = messages.REKEY_COMPLETED.byte
+        self.state = ServerState.rekey_confirmed
+        return self.send(msg + mac(self.shared_key, msg, algo=self.sa_mac, mac_len=self.sa_mac_len))
 
 
     def rng(self, num_bytes):

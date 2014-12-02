@@ -3,6 +3,8 @@ import hashlib
 import sha3
 import six
 import msgpack
+from nacl.public import PrivateKey
+from nacl.c import crypto_scalarmult
 
 from nuts import AuthChannel, Message
 from nuts.hkdf import HKDF
@@ -287,5 +289,38 @@ class CommandTest(unittest.TestCase):
         self.assertIsNone(response)
 
 
-if __name__ == '__main__':
-    unittest.main()
+    def sha3mac(self, *args):
+        return hashlib.sha3_256(self.session_key + b''.join(args)).digest()[:8]
+
+
+    def get_response(self, msg):
+        return self.channel.receive(Message('source', msg))
+
+
+    def send_with_mac(self, msg):
+        mac = self.sha3mac(msg)
+        return self.get_response(msg + mac)
+
+
+class RekeyTest(CommandTest):
+
+    def test_rekey(self):
+        pkey = PrivateKey.generate()
+        msg = b'\x03' + pkey.public_key._public_key
+        response = self.send_with_mac(msg).msg
+        expected_mac = self.sha3mac(response[:-8])
+        self.assertEqual(response[-8:], expected_mac)
+        expected_type = 0x83
+        self.assertEqual(six.byte2int(response), expected_type)
+        server_pubkey = response[1:-8]
+        new_shared_secret = crypto_scalarmult(pkey._private_key, server_pubkey)
+
+        # Send confirm
+        self.session_key = new_shared_secret
+        msg = b'\x04'
+        response = self.send_with_mac(msg).msg
+        expected_type = 0x84
+        self.assertEqual(six.byte2int(response), expected_type)
+        expected_mac = self.sha3mac(response[:-8])
+        self.assertEqual(response[-8:], expected_mac)
+        self.assertEqual(self.session_key, self.channel.shared_key)
