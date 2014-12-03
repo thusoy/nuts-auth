@@ -1,3 +1,5 @@
+import os
+import quopri
 import six
 import quopri
 
@@ -21,3 +23,12 @@ def decode_version(version):
     major = six.byte2int(version) >> 4
     minor = six.byte2int(version) & 15
     return ('%d.%d' % (major, minor)).encode('ascii')
+
+
+def rng(num_bytes):
+    """ Read `num_bytes` from the RNG. """
+    if os.path.exists('/dev/hwrng'):
+        with open('/dev/hwrng', 'r') as hwrng:
+            return hwrng.read(num_bytes)
+    else:
+        return os.urandom(8)

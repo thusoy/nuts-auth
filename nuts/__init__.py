@@ -2,10 +2,11 @@ from __future__ import print_function
 
 from . import messages
 from .hkdf import HKDF
-from .utils import ascii_bin, decode_version, encode_version
+from .utils import ascii_bin, decode_version, encode_version, rng
 from .varint import encode_varint, decode_varint
 
 from collections import namedtuple
+from contextlib import contextmanager
 from itsdangerous import constant_time_compare
 from enum import Enum
 from functools import partial
@@ -18,10 +19,15 @@ import os
 import sha3
 import six
 import string
+import socket
+import sys
 
 
 # The main message class that the AuthChannel operate on
 Message = namedtuple('Message', ['source', 'msg'])
+
+def handshake_mac(*args):
+    return hashlib.sha3_256(b''.join(args)).digest()[:8]
 
 
 class ServerState(Enum):
@@ -33,10 +39,49 @@ class ServerState(Enum):
 
 
 def send(dest, msg):
-    print('Sending msg of length %d to %s: %s' % (len(msg), dest, ascii_bin(msg)))
     msg = Message(dest, msg)
     return msg
 
+
+class ServerChannel(object):
+
+    def __init__(self, secret):
+        self.channel = AuthChannel(secret)
+
+
+    def listen(self, address):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            self.sock.bind(address)
+            print('Bound to %s:%s' % address)
+        except Exception as e:
+            print(e)
+            raise
+
+
+    def receive(self):
+        print('Listening...')
+        data, sender = self.sock.recvfrom(1024)
+        message = Message(sender, data)
+        reply = self.channel.receive(message)
+        if reply and reply.msg:
+            print('Sending msg of length %d to %s: %s' % (len(reply.msg), reply.source, ascii_bin(reply.msg)))
+            self.sock.sendto(reply.msg, sender)
+        return message
+
+
+class ClientChannel(object):
+
+    def __init__(self, secret):
+        self.channel = AuthChannel(secret)
+
+
+    def connect(self, addr):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+
+class NutsConnectionError(Exception):
+    """ Something failed in the communication. """
 
 class AuthChannel(object):
 
@@ -49,6 +94,7 @@ class AuthChannel(object):
         b'hmac-sha1',
         b'hmac-sha256',
     ]
+
 
     def __init__(self, shared_key, app=None):
         """ Create a new auth channel context to keep around. """
@@ -65,6 +111,82 @@ class AuthChannel(object):
             session.set_app(app)
 
 
+    def init_session_mac(self, key, func_name, length):
+        func = getattr(hashlib, func_name)
+        self._mac_key = key
+        self._mac_func = func
+        self._mac_length = length
+
+
+    def get_mac(self, *args):
+        print('MACing %s ' % ascii_bin(b''.join(args)))
+        return self._mac_func(self._mac_key + b''.join(args)).digest()[:self._mac_length]
+
+
+    @contextmanager
+    def connect(self, address):
+        self.server_address = address
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.settimeout(2.0)
+        R_b = rng(8)
+        msg = messages.CLIENT_HELLO.byte + encode_version(b'1.0') + R_b
+        mac = handshake_mac(self.shared_key, msg)
+        self.sock.sendto(msg + mac, self.server_address)
+        try:
+            data, addr = self.sock.recvfrom(1024)
+        except socket.timeout as ex:
+            print('Host did not respond in time, are you sure the address, port and shared secret are correct?')
+            raise NutsConnectionError(ex), None, sys.exc_info()[2]
+        print(ascii_bin(data))
+        print(addr)
+
+        expected_mac = handshake_mac(self.shared_key, data[:-8], R_b)
+        if not data[-8:] == expected_mac:
+            raise NutsConnectionError('Invalid mac received from server, terminating...')
+        R_a = data[1:-8]
+        sa_msg = messages.SA_PROPOSAL.byte
+        session_key = HKDF(R_a + R_b, self.shared_key).expand(info=b'1.0', length=16)
+        print('Session key: %s' % ascii_bin(session_key))
+        sa_mac = hashlib.sha3_256(self.shared_key + sa_msg + R_a).digest()[:8]
+        self.sock.sendto(sa_msg + sa_mac, self.server_address)
+        try:
+            data, addr = self.sock.recvfrom(1024)
+        except socket.timeout as ex:
+            print('Host did not respond to SA proposal in time')
+            raise NutsConnectionError(ex), None, sys.exc_info()[2]
+
+        expected_mac = handshake_mac(session_key, data[:-8])
+        if not data[-8:] == expected_mac:
+            raise NutsConnectionError('Invalid MAC on SA')
+
+        sa = msgpack.loads(data[1:-8])
+        self.init_session_mac(key=session_key, func_name=sa['mac'], length=sa['mac_len'])
+        self.s_seq = self.c_seq = 0
+
+        # Session setup complete, let client use the session
+        yield self
+
+        # Send terminate
+        print('Terminating session...')
+        terminate_msg = messages.CLIENT_TERMINATE.byte
+        terminate_mac = self.get_mac(terminate_msg)
+        self.sock.sendto(terminate_msg + terminate_mac, self.server_address)
+
+
+    def send(self, data):
+        msg = messages.COMMAND.byte + encode_varint(self.c_seq) + data
+        mac = self.get_mac(msg)
+        self.sock.sendto(msg + mac, self.server_address)
+
+
+    def actual_receive(self, timeout=5):
+        """ Listen for incoming message, validate and return to consumer. """
+        self.sock.settimeout(timeout)
+        try:
+            data, addr = self.sock.recvfrom(1024)
+        except socket.timeout as ex:
+            raise NutsConnectionError(ex), None, sys.exc_info()[2]
+
     def receive(self, message):
         """ Handle incoming message on the channel. """
         if message.source in self.sessions:
@@ -74,14 +196,15 @@ class AuthChannel(object):
             self.sessions[message.source] = session
         response = session.handle(message.msg)
         if session.state == ServerState.inactive:
-            print('Terminating session with %s' % message.source)
+            print('Terminating session with %s' % str(message.source))
             del self.sessions[message.source]
-        if session.state == ServerState.rekey_confirmed:
+        elif session.state == ServerState.rekey_confirmed:
             print('Rekey confirmed, new master key in place, invalidating all existing sessions..')
             self.sessions = {}
             print('Session invalidated, shared key updated')
             self.shared_key = session.shared_key
-        return response
+        if response:
+            return response
 
 
 class Session(object):
@@ -93,6 +216,7 @@ class Session(object):
     version = b'1.0'
 
     def __init__(self, id_b, shared_key, app):
+        print('Creating new session with %s:%d...' % id_b)
         self.id_b = id_b
         self.shared_key = shared_key
         self.state = ServerState.inactive
@@ -159,22 +283,25 @@ class Session(object):
         """
         # Verify that incoming packet has correct length
         if not len(b'\x00' + message) == 18:
+            print('Wrong length of client hello')
             return
 
         # Verify incoming MAC
         if not self.verify_mac(b'\x00' + message, algo='sha3_256', length=8):
+            print('Incorrect mac for client hello')
             return
 
         # Check that version is supported
         client_version = decode_version(message[:1])
         if not client_version == self.version:
             # reply with supported version, and copy of client's message
+            print('Unsupported version of client hello')
             return self.send(messages.VERSION_NOT_SUPPORTED.byte +
                 encode_version(self.version) +
                 message[:-8])
 
 
-        self.R_a = self.rng(8)
+        self.R_a = rng(8)
         self.R_b = message[1:9]
 
         msg = messages.SERVER_HELLO.byte + self.R_a
@@ -254,6 +381,7 @@ class Session(object):
 
         # Expand session key
         self.session_key = HKDF(self.R_a + self.R_b, self.shared_key).expand(self.version, length=16)
+        print('Session key: %s' % ascii_bin(self.session_key))
 
         sa = {
             'mac': selected_mac,
@@ -313,15 +441,6 @@ class Session(object):
         return self.send(msg + self.get_mac(msg, key=self.shared_key))
 
 
-    def rng(self, num_bytes):
-        """ Read `num_bytes` from the RNG. """
-        if os.path.exists('/dev/hwrng'):
-            with open('/dev/hwrng', 'r') as hwrng:
-                return hwrng.read(num_bytes)
-        else:
-            return os.urandom(8)
-
-
     def respond_to_message_type_not_supported(self, message):
         raise NotImplemented()
 
@@ -336,7 +455,7 @@ class Session(object):
         # Verify MAC
         msg, sig = message[:-self.sa_mac_len], message[-self.sa_mac_len:]
         if not self.verify_mac(b'\x02' + message):
-            print('Invalid mac')
+            print('Invalid mac on command')
             return
 
         # Verify sequence number

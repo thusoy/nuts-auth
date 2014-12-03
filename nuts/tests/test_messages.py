@@ -1,6 +1,6 @@
 import unittest
 import hashlib
-import sha3
+import sha3 # pylint: disable=unused-import
 import six
 import msgpack
 from nacl.public import PrivateKey
@@ -16,7 +16,7 @@ class BaseMessageTestCase(unittest.TestCase):
     mac = 'sha3_256'
     mac_len = 8
 
-    def assertMessageType(self, response, expected_type):
+    def assert_message_type(self, response, expected_type):
         self.assertEqual(six.byte2int(response), expected_type)
 
 
@@ -41,7 +41,7 @@ class BaseMessageTestCase(unittest.TestCase):
         return self.get_response(msg + mac)
 
 
-    def assertCorrectMAC(self, response):
+    def assert_correct_mac(self, response):
         expected_mac = self.get_mac(response[:-self.mac_len])
         self.assertEqual(response[-self.mac_len:], expected_mac)
 
@@ -83,7 +83,7 @@ class ClientHelloTest(BaseMessageTestCase):
         msg = b'\x00' + version + R_b
         response = self.send_with_mac(msg).msg
         self.assertEqual(len(response), 17)
-        self.assertMessageType(response, 0x80)
+        self.assert_message_type(response, 0x80)
         expected_mac = self.get_mac(response[:-self.mac_len], R_b)
         self.assertEqual(response[-self.mac_len:], expected_mac)
 
@@ -112,7 +112,7 @@ class ClientHelloTest(BaseMessageTestCase):
         for version in [0x20, 0x00, 0xff]:
             msg = b'\x00' + six.int2byte(version) + R_b
             response = self.send_with_mac(msg).msg
-            self.assertMessageType(response, 0x83)
+            self.assert_message_type(response, 0x83)
 
 
 class SAProposalTest(BaseMessageTestCase):
@@ -134,8 +134,8 @@ class SAProposalTest(BaseMessageTestCase):
         mac = self.get_mac(msg, self.R_a)
         response = self.get_response(msg + mac).msg
         self.session_key = HKDF(self.R_a + self.R_b, self.shared_secret).expand(b'1.0', length=16)
-        self.assertCorrectMAC(response)
-        self.assertMessageType(response, 0x81)
+        self.assert_correct_mac(response)
+        self.assert_message_type(response, 0x81)
 
         sa = msgpack.loads(response[1:-self.mac_len])
 
@@ -228,8 +228,8 @@ class CommandTest(EstablishedSessionTestCase):
     def test_command(self):
         msg = b'\x02\x00' + b'Hello, space'
         response = self.send_with_mac(msg).msg
-        self.assertCorrectMAC(response)
-        self.assertMessageType(response, 0x82)
+        self.assert_correct_mac(response)
+        self.assert_message_type(response, 0x82)
         seq_num = six.byte2int(response[1:])
         self.assertEqual(seq_num, 0)
         self.assertEqual(response[2:-self.mac_len], b'Hello, earthlings')
@@ -237,7 +237,7 @@ class CommandTest(EstablishedSessionTestCase):
         # second command should have different seqnums
         msg = b'\x02\x01' + b'Hello again!'
         response = self.send_with_mac(msg).msg
-        self.assertCorrectMAC(response)
+        self.assert_correct_mac(response)
         seq_num = six.byte2int(response[1:])
         self.assertEqual(seq_num, 1)
         self.assertEqual(response[2:-self.mac_len], b'Hello, earthlings')
@@ -246,8 +246,8 @@ class CommandTest(EstablishedSessionTestCase):
     def test_command_multibyte_sequence_number(self):
         msg = b'\x02\x80\x80\x00' + b'Hello, space'
         response = self.send_with_mac(msg).msg
-        self.assertCorrectMAC(response)
-        self.assertMessageType(response, 0x82)
+        self.assert_correct_mac(response)
+        self.assert_message_type(response, 0x82)
 
 
     def test_command_invalid_type(self):
@@ -260,7 +260,7 @@ class CommandTest(EstablishedSessionTestCase):
     def test_command_replay(self):
         msg = b'\x02\x00' + b'Hello, space'
         response = self.send_with_mac(msg).msg
-        self.assertCorrectMAC(response)
+        self.assert_correct_mac(response)
         print('Response: %s' % ascii_bin(response))
         seq_num = six.byte2int(response[1:])
         self.assertEqual(seq_num, 0)
@@ -293,7 +293,7 @@ class CommandTest(EstablishedSessionTestCase):
     def test_command_app_crash(self):
         class CrashingApp(object):
             def got_message(self, message):
-                1/0
+                return 1/0
 
         self.channel.set_app(CrashingApp())
         response = self.send_with_mac(b'\x02')
@@ -315,8 +315,8 @@ class RekeyTest(EstablishedSessionTestCase):
         pkey = PrivateKey.generate()
         msg = b'\x03' + pkey.public_key._public_key
         response = self.send_with_mac(msg).msg
-        self.assertCorrectMAC(response)
-        self.assertMessageType(response, 0x83)
+        self.assert_correct_mac(response)
+        self.assert_message_type(response, 0x83)
         server_pubkey = response[1:-self.mac_len]
         new_shared_secret = crypto_scalarmult(pkey._private_key, server_pubkey)
 
@@ -324,8 +324,8 @@ class RekeyTest(EstablishedSessionTestCase):
         self.session_key = new_shared_secret
         msg = b'\x04'
         response = self.send_with_mac(msg).msg
-        self.assertCorrectMAC(response)
-        self.assertMessageType(response, 0x84)
+        self.assert_correct_mac(response)
+        self.assert_message_type(response, 0x84)
         self.assertEqual(self.session_key, self.channel.shared_key)
 
 
@@ -346,7 +346,7 @@ class RekeyTest(EstablishedSessionTestCase):
     def test_rekey_confirm_invalid_length(self):
         msg = b'\x03' + b'\x00'*32
         response = self.send_with_mac(msg).msg
-        self.assertMessageType(response, 0x83)
+        self.assert_message_type(response, 0x83)
 
         msg = b'\x04\x00'
         response = self.send_with_mac(msg)
@@ -356,7 +356,7 @@ class RekeyTest(EstablishedSessionTestCase):
     def test_rekey_confirm_invalid_mac(self):
         msg = b'\x03' + b'\x00'*32
         response = self.send_with_mac(msg).msg
-        self.assertMessageType(response, 0x83)
+        self.assert_message_type(response, 0x83)
 
         msg = b'\x04'
         mac = b'\x00'*self.mac_len

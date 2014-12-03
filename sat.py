@@ -4,7 +4,7 @@
 
 import io
 import threading
-import picamera
+#import picamera
 import time
 import json
 
@@ -45,3 +45,13 @@ def do_timelapse(number_of_pictures, seconds_between_pictures):
         while pictures_taken < number_of_pictures:
             pictures_taken += 1
             time.sleep(seconds_between_pictures)
+
+
+from nuts import ServerChannel as AuthChannel
+
+# Server
+channel = AuthChannel('secret')
+channel.listen( ('127.0.0.1', 8001) )
+while True:
+    msg = channel.receive()
+    print msg, msg.source
