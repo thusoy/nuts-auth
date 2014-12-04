@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
     This is the actual satellite software, protected by the NUTS auth layer.
 """
@@ -47,11 +48,13 @@ def do_timelapse(number_of_pictures, seconds_between_pictures):
             time.sleep(seconds_between_pictures)
 
 
-from nuts import ServerChannel as AuthChannel
+from nuts import UDPAuthChannel
 
 # Server
-channel = AuthChannel('secret')
+channel = UDPAuthChannel('secret')
 channel.listen( ('127.0.0.1', 8001) )
 while True:
     msg = channel.receive()
-    print msg, msg.source
+    print '**********************************', msg
+    for i in range(4):
+        channel.send('Pic %d' % i, msg.sender)

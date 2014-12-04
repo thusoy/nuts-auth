@@ -6,7 +6,7 @@ import msgpack
 from nacl.public import PrivateKey
 from nacl.c import crypto_scalarmult
 
-from nuts import AuthChannel, Message
+from nuts import AuthenticatedMessage, DummyAuthChannel
 from nuts.hkdf import HKDF
 from nuts.utils import ascii_bin
 
@@ -33,7 +33,7 @@ class BaseMessageTestCase(unittest.TestCase):
 
 
     def get_response(self, msg):
-        return self.channel.receive(Message('source', msg))
+        return self.channel.handle_message(AuthenticatedMessage('source', msg))
 
 
     def send_with_mac(self, msg, **kwargs):
@@ -52,12 +52,7 @@ class EstablishedSessionTestCase(BaseMessageTestCase):
 
     def setUp(self):
         self.shared_secret = b'secret'
-
-        class TestApp(object):
-            def got_message(self, message):
-                return b'Hello, earthlings'
-
-        self.channel = AuthChannel(self.shared_secret, app=TestApp())
+        self.channel = DummyAuthChannel(self.shared_secret)
 
         # Put channel in established state
         self.R_b = b'\x00'*8
@@ -74,7 +69,7 @@ class ClientHelloTest(BaseMessageTestCase):
 
     def setUp(self):
         self.shared_secret = b'secret'
-        self.channel = AuthChannel(self.shared_secret)
+        self.channel = DummyAuthChannel(self.shared_secret)
 
 
     def test_client_hello(self):
@@ -119,7 +114,7 @@ class SAProposalTest(BaseMessageTestCase):
 
     def setUp(self):
         self.shared_secret = b'secret'
-        self.channel = AuthChannel(self.shared_secret)
+        self.channel = DummyAuthChannel(self.shared_secret)
 
         # Send valid client_hello to get channel into correct state
         self.R_b = b'\x00'*8
@@ -187,6 +182,7 @@ class SAProposalTest(BaseMessageTestCase):
             msg = b'\x01' + msgpack.dumps({'mac_len': length})
             mac = self.get_mac(msg, self.R_a)
             response = self.get_response(msg + mac).msg
+            print(response)
             sa = msgpack.loads(response[1:-self.mac_len])
             self.assertEqual(sa[b'mac'], b'sha3_256')
             self.assertEqual(sa[b'mac_len'], length)
@@ -225,29 +221,25 @@ class SAProposalTest(BaseMessageTestCase):
 
 class CommandTest(EstablishedSessionTestCase):
 
+    def assert_expecting_seqnum(self, number):
+        self.assertEqual(self.channel.sessions['source'].c_seq, number)
+
+
     def test_command(self):
         msg = b'\x02\x00' + b'Hello, space'
-        response = self.send_with_mac(msg).msg
-        self.assert_correct_mac(response)
-        self.assert_message_type(response, 0x82)
-        seq_num = six.byte2int(response[1:])
-        self.assertEqual(seq_num, 0)
-        self.assertEqual(response[2:-self.mac_len], b'Hello, earthlings')
+        self.send_with_mac(msg)
+        self.assert_expecting_seqnum(1)
 
         # second command should have different seqnums
         msg = b'\x02\x01' + b'Hello again!'
-        response = self.send_with_mac(msg).msg
-        self.assert_correct_mac(response)
-        seq_num = six.byte2int(response[1:])
-        self.assertEqual(seq_num, 1)
-        self.assertEqual(response[2:-self.mac_len], b'Hello, earthlings')
+        self.send_with_mac(msg)
+        self.assert_expecting_seqnum(2)
 
 
     def test_command_multibyte_sequence_number(self):
         msg = b'\x02\x80\x80\x00' + b'Hello, space'
-        response = self.send_with_mac(msg).msg
-        self.assert_correct_mac(response)
-        self.assert_message_type(response, 0x82)
+        self.send_with_mac(msg)
+        self.assert_expecting_seqnum(1)
 
 
     def test_command_invalid_type(self):
@@ -259,54 +251,35 @@ class CommandTest(EstablishedSessionTestCase):
 
     def test_command_replay(self):
         msg = b'\x02\x00' + b'Hello, space'
-        response = self.send_with_mac(msg).msg
-        self.assert_correct_mac(response)
-        print('Response: %s' % ascii_bin(response))
-        seq_num = six.byte2int(response[1:])
-        self.assertEqual(seq_num, 0)
-        self.assertEqual(response[2:-self.mac_len], b'Hello, earthlings')
+        self.send_with_mac(msg)
+        self.assert_expecting_seqnum(1)
 
         # replay first message
-        msg = b'\x02\x00' + b'Hello again!'
-        response = self.send_with_mac(msg)
-        self.assertIsNone(response)
+        self.send_with_mac(msg)
+        self.assert_expecting_seqnum(1)
+
+
+    def test_command_old_seqnum(self):
+        msg = b'\x02\x00' + b'Hello, space'
+        self.send_with_mac(msg)
+        self.assert_expecting_seqnum(1)
+
+        # Try with same seqnum twice
+        msg = b'\x02\x00Hello, again!'
+        self.send_with_mac(msg)
+        self.assert_expecting_seqnum(1)
 
 
     def test_command_invalid_length(self):
         msg = b'\x02'
-        response = self.get_response(msg)
-        self.assertIsNone(response)
+        self.get_response(msg)
+        self.assert_expecting_seqnum(0)
 
 
     def test_command_invalid_mac(self):
         msg = b'\x02' + b'\x00'*8
-        response = self.get_response(msg)
-        self.assertIsNone(response)
-
-
-    def test_command_no_app(self):
-        self.channel.set_app(None)
-        response = self.send_with_mac(b'\x02')
-        self.assertIsNone(response)
-
-
-    def test_command_app_crash(self):
-        class CrashingApp(object):
-            def got_message(self, message):
-                return 1/0
-
-        self.channel.set_app(CrashingApp())
-        response = self.send_with_mac(b'\x02')
-        self.assertIsNone(response)
-
-
-    def test_command_mute_app(self):
-        class MuteApp(object):
-            def got_message(self, message):
-                return None
-        self.channel.set_app(MuteApp())
-        response = self.send_with_mac(b'\x02')
-        self.assertIsNone(response)
+        self.get_response(msg)
+        self.assert_expecting_seqnum(0)
 
 
 class RekeyTest(EstablishedSessionTestCase):

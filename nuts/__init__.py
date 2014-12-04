@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-from . import messages
 from .hkdf import HKDF
 from .utils import ascii_bin, decode_version, encode_version, rng
 from .varint import encode_varint, decode_varint
@@ -8,7 +7,7 @@ from .varint import encode_varint, decode_varint
 from collections import namedtuple
 from contextlib import contextmanager
 from itsdangerous import constant_time_compare
-from enum import Enum
+from enum import Enum, IntEnum
 from functools import partial
 from nacl.c import crypto_scalarmult
 from nacl.public import PrivateKey
@@ -24,7 +23,7 @@ import sys
 
 
 # The main message class that the AuthChannel operate on
-Message = namedtuple('Message', ['source', 'msg'])
+AuthenticatedMessage = namedtuple('Message', ['sender', 'msg'])
 
 def handshake_mac(*args):
     return hashlib.sha3_256(b''.join(args)).digest()[:8]
@@ -38,52 +37,59 @@ class ServerState(Enum):
     rekey_confirmed = 5
 
 
-def send(dest, msg):
-    msg = Message(dest, msg)
-    return msg
+class ClientState(Enum):
+    wait_for_server_hello = 1
+    wait_for_sa = 2
+    established = 3
+    rekey = 4
 
 
-class ServerChannel(object):
+class Message(IntEnum):
 
-    def __init__(self, secret):
-        self.channel = AuthChannel(secret)
+    # Client messages
 
+    #: 'First message from client, with challenge to server and protocol version.'
+    CLIENT_HELLO = 0x00
+    #: 'Security association suggested by client.'
+    SA_PROPOSAL = 0x01
+    #: 'Command from client.'
+    COMMAND = 0x02
+    #: 'Generate new master key'
+    REKEY = 0x03
+    #: 'Confirm successful re-key by signing a random nonce with the new key'
+    REKEY_CONFIRM = 0x04
+    #: 'Client is terminating the session.'
+    CLIENT_TERMINATE = 0x0f
 
-    def listen(self, address):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            self.sock.bind(address)
-            print('Bound to %s:%s' % address)
-        except Exception as e:
-            print(e)
-            raise
+    # Server messages
 
+    #: 'First response from server, responds to client challenge and challenges client'
+    SERVER_HELLO = 0x80
+    #: 'Negotiated security association from server.'
+    SA = 0x81
+    #: 'Reply to command issued by client.'
+    REPLY = 0x82
+    #: 'Respond to re-key command with satellites public key'
+    REKEY_RESPONSE = 0x83
+    #: 'Complete the re-keying by invalidating all existing sessions and '
+    REKEY_COMPLETED = 0x84
+    #: 'Version suggested by client is not supported by server.'
+    VERSION_NOT_SUPPORTED = 0x83
+    #: 'Message type received from client is not supported by server.'
+    MESSAGE_TYPE_NOT_SUPPORTED = 0x84
+    #: 'Server is terminating the session.'
+    SERVER_TERMINATE = 0x8f
 
-    def receive(self):
-        print('Listening...')
-        data, sender = self.sock.recvfrom(1024)
-        message = Message(sender, data)
-        reply = self.channel.receive(message)
-        if reply and reply.msg:
-            print('Sending msg of length %d to %s: %s' % (len(reply.msg), reply.source, ascii_bin(reply.msg)))
-            self.sock.sendto(reply.msg, sender)
-        return message
-
-
-class ClientChannel(object):
-
-    def __init__(self, secret):
-        self.channel = AuthChannel(secret)
-
-
-    def connect(self, addr):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 
 class NutsConnectionError(Exception):
     """ Something failed in the communication. """
 
+
 class AuthChannel(object):
+    """ Generic, transport-agnostic authenticated channel. Needs to be overridden by class
+    implementing `receive` and `listen`.
+    """
 
     #: MACs supported by this satellite/server. Used in the SA negotiation, should be ordered
     #: by preference (strength).
@@ -96,19 +102,81 @@ class AuthChannel(object):
     ]
 
 
-    def __init__(self, shared_key, app=None):
+    def __init__(self, shared_key):
         """ Create a new auth channel context to keep around. """
         self.shared_key = shared_key
         self.sessions = {}
-        self.app = app
+        self._messages = []
 
 
-    def set_app(self, app):
-        self.app = app
+    def receive(self):
+        while not self._messages:
+            print('Listening...')
+            data, sender = self.read_data()
+            message = AuthenticatedMessage(sender, data)
+            self.handle_message(message)
+        return self._messages.pop(0)
 
-        # Update app for all existing sessions
-        for session in self.sessions.values():
-            session.set_app(app)
+
+    @contextmanager
+    def connect(self, address):
+        session = ClientSession(address, self.shared_key, self)
+        session.connect()
+
+        # Session setup complete, let client use the session
+        yield session
+
+        # Send terminate
+        print('Terminating session...')
+        session.terminate()
+
+
+    def _send(self, data, address):
+        self.send_data(data, address)
+
+
+    def send(self, data, address):
+        """ Externally exposed interface for sending data. """
+        session = self.sessions[address]
+        session.send(data)
+
+
+    def handle_message(self, message):
+        """ Handle incoming message on the channel. """
+        if message.sender in self.sessions:
+            session = self.sessions.get(message.sender)
+        else:
+            session = Session(message.sender, self.shared_key, self)
+            self.sessions[message.sender] = session
+        response = session.handle(message.msg)
+        if session.state == ServerState.inactive:
+            print('Terminating session with %s' % str(message.sender))
+            del self.sessions[message.sender]
+        elif session.state == ServerState.rekey_confirmed:
+            print('Rekey confirmed, new master key in place, invalidating all existing sessions..')
+            self.sessions = {}
+            print('Session invalidated, shared key updated')
+            self.shared_key = session.shared_key
+        if response:
+            msg = AuthenticatedMessage(message.sender, response)
+            self._messages.append(msg)
+            return msg
+
+
+class ClientSession(object):
+
+    def __init__(self, id_a, shared_key, channel):
+        self.id_a = id_a
+        self.shared_key = shared_key
+        self.channel = channel
+        self._messages = []
+
+        self.handlers = {
+            Message.SERVER_HELLO: self.do_sa_proposal,
+            Message.SA: self.establish,
+            Message.REPLY: self.respond_to_server_message,
+            Message.SERVER_TERMINATE: self.respond_to_server_terminate,
+        }
 
 
     def init_session_mac(self, key, func_name, length):
@@ -123,88 +191,136 @@ class AuthChannel(object):
         return self._mac_func(self._mac_key + b''.join(args)).digest()[:self._mac_length]
 
 
-    @contextmanager
-    def connect(self, address):
-        self.server_address = address
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.settimeout(2.0)
-        R_b = rng(8)
-        msg = messages.CLIENT_HELLO.byte + encode_version(b'1.0') + R_b
-        mac = handshake_mac(self.shared_key, msg)
-        self.sock.sendto(msg + mac, self.server_address)
-        try:
-            data, addr = self.sock.recvfrom(1024)
-        except socket.timeout as ex:
-            print('Host did not respond in time, are you sure the address, port and shared secret are correct?')
-            raise NutsConnectionError(ex), None, sys.exc_info()[2]
-        print(ascii_bin(data))
-        print(addr)
+    def connect(self):
+        self.do_client_hello()
+        while self.state != ClientState.established:
+            data, sender = self.channel.read_data()
+            if sender != self.id_a:
+                continue
+            self.handle(data)
+            print('State is now %s' % self.state)
+        print('State is now %s' % self.state)
 
-        expected_mac = handshake_mac(self.shared_key, data[:-8], R_b)
-        if not data[-8:] == expected_mac:
-            raise NutsConnectionError('Invalid mac received from server, terminating...')
-        R_a = data[1:-8]
-        sa_msg = messages.SA_PROPOSAL.byte
-        session_key = HKDF(R_a + R_b, self.shared_key).expand(info=b'1.0', length=16)
-        print('Session key: %s' % ascii_bin(session_key))
-        sa_mac = hashlib.sha3_256(self.shared_key + sa_msg + R_a).digest()[:8]
-        self.sock.sendto(sa_msg + sa_mac, self.server_address)
-        try:
-            data, addr = self.sock.recvfrom(1024)
-        except socket.timeout as ex:
-            print('Host did not respond to SA proposal in time')
-            raise NutsConnectionError(ex), None, sys.exc_info()[2]
 
-        expected_mac = handshake_mac(session_key, data[:-8])
+    def establish(self, data):
+        print('Handling SA')
+        expected_mac = handshake_mac(self.session_key, data[:-8])
         if not data[-8:] == expected_mac:
             raise NutsConnectionError('Invalid MAC on SA')
 
         sa = msgpack.loads(data[1:-8])
-        self.init_session_mac(key=session_key, func_name=sa['mac'], length=sa['mac_len'])
+        self.init_session_mac(key=self.session_key, func_name=sa['mac'], length=sa['mac_len'])
         self.s_seq = self.c_seq = 0
+        self.state = ClientState.established
+        print('Session established')
 
-        # Session setup complete, let client use the session
-        yield self
 
-        # Send terminate
-        print('Terminating session...')
-        terminate_msg = messages.CLIENT_TERMINATE.byte
+    def verify_mac(self, message):
+        expected_mac = self.get_mac(message[:-self._mac_length])
+        return constant_time_compare(message[-self._mac_length:], expected_mac)
+
+
+    def respond_to_server_message(self, message):
+        # Verify length
+        if not self._mac_length + 1 <= len(message) <= 2**16:
+            print('Invalid length of reply')
+            return
+
+        # Verify MAC
+        if not self.verify_mac(message):
+            print('Invalid MAC on reply')
+
+        # Verify sequence number
+        seqnum_bytes = []
+        for byte in six.iterbytes(message[1:]):
+            seqnum_bytes.append(byte)
+            if byte >> 7 == 0:
+                break
+        server_seqnum = decode_varint(seqnum_bytes)
+        if not server_seqnum == self.s_seq:
+            print('Not expected sequence number, expected %d, was %d' % (self.s_seq, server_seqnum))
+            # TODO: If future sequence number, either store it or deliver it to app immediately,
+            # depending on config
+            return
+
+        self.s_seq += 1
+
+        data = message[1+len(seqnum_bytes):-self._mac_length]
+        self._messages.append(data)
+
+
+    def respond_to_server_terminate(self, message):
+        raise NotImplemented()
+
+
+    def receive(self):
+        while not self._messages:
+            data, sender = self.channel.read_data()
+            if sender != self.id_a:
+                continue
+            self.handle(data)
+        return self._messages.pop(0)
+
+
+    def handle(self, message):
+        msg_type_byte = six.byte2int(message)
+        transition_map = {
+            ClientState.wait_for_server_hello: [Message.SERVER_HELLO],
+            ClientState.wait_for_sa: [Message.SA],
+            ClientState.established: [Message.REPLY, Message.SERVER_TERMINATE],
+        }
+        valid_transitions = transition_map.get(self.state, [])
+        if not msg_type_byte in valid_transitions:
+            # Ignore
+            print('Ignoring invalid transition')
+            return
+
+        handler = self.handlers.get(msg_type_byte)
+        handler(message)
+
+
+    def do_client_hello(self):
+        self.R_b = rng(8)
+        msg = Message.CLIENT_HELLO + encode_version(b'1.0') + self.R_b
+        mac = handshake_mac(self.shared_key, msg)
+        self._send(msg + mac)
+        self.state = ClientState.wait_for_server_hello
+
+
+    def do_sa_proposal(self, data):
+        print('Handling SERVER HELLO')
+        print(ascii_bin(data))
+
+        expected_mac = handshake_mac(self.shared_key, data[:-8], self.R_b)
+        if not data[-8:] == expected_mac:
+            raise NutsConnectionError('Invalid mac received from server, terminating...')
+        self.R_a = data[1:-8]
+        sa_msg = Message.SA_PROPOSAL
+        self.session_key = HKDF(self.R_a + self.R_b, self.shared_key).expand(info=b'1.0', length=16)
+        print('Session key: %s' % ascii_bin(self.session_key))
+        sa_mac = handshake_mac(self.shared_key, sa_msg, self.R_a)
+        self._send(sa_msg + sa_mac)
+        self.state = ClientState.wait_for_sa
+
+
+
+    def terminate(self):
+        terminate_msg = Message.CLIENT_TERMINATE
         terminate_mac = self.get_mac(terminate_msg)
-        self.sock.sendto(terminate_msg + terminate_mac, self.server_address)
+        self.send(terminate_msg + terminate_mac)
+
+
+    def _send(self, data):
+        """ Internal only, sends the data just as given. """
+        self.channel._send(data, self.id_a)
 
 
     def send(self, data):
-        msg = messages.COMMAND.byte + encode_varint(self.c_seq) + data
-        mac = self.get_mac(msg)
-        self.sock.sendto(msg + mac, self.server_address)
+        """ Exposed externally to consumers. """
+        msg = six.int2byte(Message.COMMAND) + encode_varint(self.c_seq) + data
+        self._send(msg + self.get_mac(msg))
+        self.c_seq += 1
 
-
-    def actual_receive(self, timeout=5):
-        """ Listen for incoming message, validate and return to consumer. """
-        self.sock.settimeout(timeout)
-        try:
-            data, addr = self.sock.recvfrom(1024)
-        except socket.timeout as ex:
-            raise NutsConnectionError(ex), None, sys.exc_info()[2]
-
-    def receive(self, message):
-        """ Handle incoming message on the channel. """
-        if message.source in self.sessions:
-            session = self.sessions.get(message.source)
-        else:
-            session = Session(message.source, self.shared_key, self.app)
-            self.sessions[message.source] = session
-        response = session.handle(message.msg)
-        if session.state == ServerState.inactive:
-            print('Terminating session with %s' % str(message.source))
-            del self.sessions[message.source]
-        elif session.state == ServerState.rekey_confirmed:
-            print('Rekey confirmed, new master key in place, invalidating all existing sessions..')
-            self.sessions = {}
-            print('Session invalidated, shared key updated')
-            self.shared_key = session.shared_key
-        if response:
-            return response
 
 
 class Session(object):
@@ -215,30 +331,25 @@ class Session(object):
     #: will be replied.
     version = b'1.0'
 
-    def __init__(self, id_b, shared_key, app):
-        print('Creating new session with %s:%d...' % id_b)
+    def __init__(self, id_b, shared_key, channel):
+        print('Creating new session with %s...' % (id_b,))
         self.id_b = id_b
         self.shared_key = shared_key
         self.state = ServerState.inactive
-        self.app = app
+        self.channel = channel
+
+        #: A queue of messages received that haven't been consumed yet
+        self._messages = []
 
         # Setup self.handlers dict
-        self.handlers = {}
-        for message_name in dir(messages):
-            if message_name.startswith('_') or message_name[0] in string.ascii_lowercase:
-                # Built-in, skip
-                continue
-            message = getattr(messages, message_name)
-            server_is_destination = ord(message.byte) >> 7 == 0
-            if not server_is_destination:
-                continue
-            handler_name = 'respond_to_' + message_name.lower()
-            handler = getattr(self, handler_name)
-            self.handlers[six.byte2int(message.byte)] = handler
-
-
-    def set_app(self, app):
-        self.app = app
+        self.handlers = {
+            Message.CLIENT_HELLO: self.respond_to_client_hello,
+            Message.SA_PROPOSAL: self.respond_to_sa_proposal,
+            Message.COMMAND: self.respond_to_command,
+            Message.REKEY: self.respond_to_rekey,
+            Message.REKEY_CONFIRM: self.respond_to_rekey_confirm,
+            Message.CLIENT_TERMINATE: self.respond_to_client_terminate,
+        }
 
 
     def handle(self, message):
@@ -249,14 +360,14 @@ class Session(object):
         """
         msg_type_byte = six.byte2int(message)
         transition_map = {
-            ServerState.inactive: [six.byte2int(messages.CLIENT_HELLO.byte)],
-            ServerState.wait_for_sa_proposal: [six.byte2int(messages.SA_PROPOSAL.byte)],
+            ServerState.inactive: [Message.CLIENT_HELLO],
+            ServerState.wait_for_sa_proposal: [Message.SA_PROPOSAL],
             ServerState.established: [
-                six.byte2int(messages.COMMAND.byte),
-                six.byte2int(messages.REKEY.byte),
-                six.byte2int(messages.CLIENT_TERMINATE.byte),
+                Message.COMMAND,
+                Message.REKEY,
+                Message.CLIENT_TERMINATE,
             ],
-            ServerState.rekey: [six.byte2int(messages.REKEY_CONFIRM.byte)],
+            ServerState.rekey: [Message.REKEY_CONFIRM],
         }
 
 
@@ -296,22 +407,35 @@ class Session(object):
         if not client_version == self.version:
             # reply with supported version, and copy of client's message
             print('Unsupported version of client hello')
-            return self.send(messages.VERSION_NOT_SUPPORTED.byte +
+            msg = (six.int2byte(Message.VERSION_NOT_SUPPORTED) +
                 encode_version(self.version) +
                 message[:-8])
+            msg_with_mac = msg + self.get_mac(msg)
+            self._send(msg_with_mac)
+            return msg_with_mac
 
 
         self.R_a = rng(8)
         self.R_b = message[1:9]
 
-        msg = messages.SERVER_HELLO.byte + self.R_a
+        msg = six.int2byte(Message.SERVER_HELLO) + self.R_a
         mac = self.get_mac(msg, self.R_b)
         self.state = ServerState.wait_for_sa_proposal
-        return self.send(msg + mac)
+        self._send(msg + mac)
+        return msg + mac
 
 
-    def send(self, message):
-        return send(self.id_b, message)
+    def _send(self, data):
+        self.channel._send(data, self.id_b)
+
+
+    def send(self, data):
+        """ Called from AuthChannel when it needs to send data through this session. This method adds type,
+        sequence number and MAC.
+        """
+        msg = six.int2byte(Message.REPLY) + encode_varint(self.s_seq) + data
+        self._send(msg + self.get_mac(msg))
+        self.s_seq += 1
 
 
     def get_mac(self, *args, **kwargs):
@@ -387,8 +511,9 @@ class Session(object):
             'mac': selected_mac,
             'mac_len': suggested_mac_len,
         }
-        response = messages.SA.byte + msgpack.dumps(sa)
-        response = self.send(response + self.get_mac(response))
+        response = six.int2byte(Message.SA) + msgpack.dumps(sa)
+        msg = response + self.get_mac(response)
+        self._send(msg)
 
         self.sa_mac = selected_mac.decode('ascii')
         self.sa_mac_len = suggested_mac_len
@@ -397,8 +522,7 @@ class Session(object):
         self.c_seq = self.s_seq = 0
 
         self.state = ServerState.established
-
-        return response
+        return msg
 
 
     def respond_to_rekey(self, message):
@@ -413,12 +537,16 @@ class Session(object):
             print('Invalid MAC on rekey')
             return
 
+        # TODO: Needs to have verifiable seqnum to prevent DoS due to repeating the rekey msg
+
         client_pubkey = msg
         pkey = PrivateKey.generate()
         self.new_master_key = crypto_scalarmult(pkey._private_key, client_pubkey)
-        msg = messages.REKEY_RESPONSE.byte + pkey.public_key._public_key
+        msg = six.int2byte(Message.REKEY_RESPONSE) + pkey.public_key._public_key
         self.state = ServerState.rekey
-        return self.send(msg + self.get_mac(msg))
+        full_msg = msg + self.get_mac(msg)
+        self._send(full_msg)
+        return full_msg
 
 
     def respond_to_rekey_confirm(self, message):
@@ -436,9 +564,11 @@ class Session(object):
 
         # Update shared_key
         self.shared_key = self.new_master_key
-        msg = messages.REKEY_COMPLETED.byte
+        msg = six.int2byte(Message.REKEY_COMPLETED)
         self.state = ServerState.rekey_confirmed
-        return self.send(msg + self.get_mac(msg, key=self.shared_key))
+        full_msg = msg + self.get_mac(msg, key=self.shared_key)
+        self._send(full_msg)
+        return full_msg
 
 
     def respond_to_message_type_not_supported(self, message):
@@ -471,24 +601,47 @@ class Session(object):
             # depending on config
             return
 
-        # Check that we have an app to receive the message
-        if not hasattr(self, 'app') or not self.app:
-            print('No app set to receive messages')
-            return
-
         # Increase expected sequence number
         self.c_seq += 1
 
-        # Deliver the message
-        try:
-            # TODO: Test that this is correctly received by the app
-            reply = self.app.got_message(msg[len(seqnum_bytes):])
-        except:
-            print('App crashed when receiving message..')
-            return
+        # Strip seqnum
+        msg = msg[len(seqnum_bytes):]
+        self._send(msg)
 
-        # Send reply from app if one was given
-        if reply:
-            msg = messages.REPLY.byte + encode_varint(self.s_seq) + reply
-            self.s_seq += 1
-            return self.send(msg + self.get_mac(msg))
+
+class UDPAuthChannel(AuthChannel):
+
+    def __init__(self, *args, **kwargs):
+        super(UDPAuthChannel, self).__init__(*args, **kwargs)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.settimeout(2.0)
+
+
+    def listen(self, address):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            self.sock.bind(address)
+            print('Bound to %s:%s' % address)
+        except Exception as e:
+            print(e)
+            raise
+
+
+    def send_data(self, data, address):
+        print('Sending %s to %s' % (ascii_bin(data), address))
+        self.sock.sendto(data, address)
+        print("I'm now %s" % (self.sock.getsockname(),))
+
+
+    def read_data(self, *args):
+        data, sender = self.sock.recvfrom(1024)
+        print('Received data: %s from %s' % (ascii_bin(data), sender))
+        return data, sender
+
+
+class DummyAuthChannel(AuthChannel):
+    """ Only return stuff locally, probably only useful for testing. """
+
+    def send_data(self, data, address):
+        print('Sending data %s to %s' % (ascii_bin(data), address))
+
