@@ -6,7 +6,8 @@ import cbor
 from nacl.public import PrivateKey
 from nacl.c import crypto_scalarmult
 
-from nuts import AuthenticatedMessage, DummyAuthChannel
+from nuts import AuthenticatedMessage
+from nuts.channels import DummyAuthChannel
 from nuts.hkdf import HKDF
 from nuts.utils import ascii_bin
 

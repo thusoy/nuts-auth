@@ -1,14 +1,16 @@
-from nuts import DummyAuthChannel, ClientSession, ClientState
+from nuts import ClientState
+from nuts.channels import DummyAuthChannel
 from nuts.hkdf import HKDF
+from nuts.sessions import ClientSession
 from nuts.utils import ascii_bin
 
-import unittest
+import cbor
 import hashlib
 import sha3
 import six
-import cbor
-from nacl.public import PrivateKey
+import unittest
 from nacl.c import crypto_scalarmult
+from nacl.public import PrivateKey
 
 def handshake_mac(*args):
     print('Test MACing %s (%d) with key %s (%d)' % (

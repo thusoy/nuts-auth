@@ -1,8 +1,7 @@
 import unittest
 import six
 
-from nuts import encode_version, decode_version
-from nuts.varint import encode_varint, decode_varint
+from nuts.utils import encode_version, decode_version, encode_varint, decode_varint
 
 class NutsCoreTest(unittest.TestCase):
 
