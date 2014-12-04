@@ -48,37 +48,37 @@ class Message(IntEnum):
 
     # Client messages
 
-    #: 'First message from client, with challenge to server and protocol version.'
-    CLIENT_HELLO = 0x00
-    #: 'Security association suggested by client.'
-    SA_PROPOSAL = 0x01
-    #: 'Command from client.'
-    COMMAND = 0x02
-    #: 'Generate new master key'
-    REKEY = 0x03
-    #: 'Confirm successful re-key by signing a random nonce with the new key'
-    REKEY_CONFIRM = 0x04
-    #: 'Client is terminating the session.'
-    CLIENT_TERMINATE = 0x0f
+    #: First message from client, with challenge to server and protocol version.
+    client_hello = 0x00
+    #: Security association suggested by client.
+    sa_proposal = 0x01
+    #: Command from client.
+    command = 0x02
+    #: Generate new master key
+    rekey = 0x03
+    #: Confirm successful re-key by signing a random nonce with the new key
+    rekey_confirm = 0x04
+    #: Client is terminating the session.
+    client_terminate = 0x0f
 
     # Server messages
 
-    #: 'First response from server, responds to client challenge and challenges client'
-    SERVER_HELLO = 0x80
-    #: 'Negotiated security association from server.'
-    SA = 0x81
-    #: 'Reply to command issued by client.'
-    REPLY = 0x82
-    #: 'Respond to re-key command with satellites public key'
-    REKEY_RESPONSE = 0x83
-    #: 'Complete the re-keying by invalidating all existing sessions and '
-    REKEY_COMPLETED = 0x84
-    #: 'Version suggested by client is not supported by server.'
-    VERSION_NOT_SUPPORTED = 0x83
-    #: 'Message type received from client is not supported by server.'
-    MESSAGE_TYPE_NOT_SUPPORTED = 0x84
-    #: 'Server is terminating the session.'
-    SERVER_TERMINATE = 0x8f
+    #: First response from server, responds to client challenge and challenges client
+    server_hello = 0x80
+    #: Negotiated security association from server.
+    sa = 0x81
+    #: Reply to command issued by client.
+    reply = 0x82
+    #: Respond to re-key command with satellites public key
+    rekey_response = 0x83
+    #: Complete the re-keying by invalidating all existing sessions
+    rekey_completed = 0x84
+    #: Version suggested by client is not supported by server.
+    version_not_supported = 0x83
+    #: Message type received from client is not supported by server.
+    message_type_not_supported = 0x84
+    #: Server is terminating the session.
+    server_terminate = 0x8f
 
 
 
@@ -172,10 +172,10 @@ class ClientSession(object):
         self._messages = []
 
         self.handlers = {
-            Message.SERVER_HELLO: self.do_sa_proposal,
-            Message.SA: self.establish,
-            Message.REPLY: self.respond_to_server_message,
-            Message.SERVER_TERMINATE: self.respond_to_server_terminate,
+            Message.server_hello: self.do_sa_proposal,
+            Message.sa: self.establish,
+            Message.reply: self.respond_to_server_message,
+            Message.server_terminate: self.respond_to_server_terminate,
         }
 
 
@@ -265,9 +265,9 @@ class ClientSession(object):
     def handle(self, message):
         msg_type_byte = six.byte2int(message)
         transition_map = {
-            ClientState.wait_for_server_hello: [Message.SERVER_HELLO],
-            ClientState.wait_for_sa: [Message.SA],
-            ClientState.established: [Message.REPLY, Message.SERVER_TERMINATE],
+            ClientState.wait_for_server_hello: [Message.server_hello],
+            ClientState.wait_for_sa: [Message.sa],
+            ClientState.established: [Message.reply, Message.server_terminate],
         }
         valid_transitions = transition_map.get(self.state, [])
         if not msg_type_byte in valid_transitions:
@@ -281,7 +281,7 @@ class ClientSession(object):
 
     def do_client_hello(self):
         self.R_b = rng(8)
-        msg = Message.CLIENT_HELLO + encode_version(b'1.0') + self.R_b
+        msg = Message.client_hello + encode_version(b'1.0') + self.R_b
         mac = handshake_mac(self.shared_key, msg)
         self._send(msg + mac)
         self.state = ClientState.wait_for_server_hello
@@ -295,7 +295,7 @@ class ClientSession(object):
         if not data[-8:] == expected_mac:
             raise NutsConnectionError('Invalid mac received from server, terminating...')
         self.R_a = data[1:-8]
-        sa_msg = Message.SA_PROPOSAL
+        sa_msg = Message.sa_proposal
         self.session_key = HKDF(self.R_a + self.R_b, self.shared_key).expand(info=b'1.0', length=16)
         print('Session key: %s' % ascii_bin(self.session_key))
         sa_mac = handshake_mac(self.shared_key, sa_msg, self.R_a)
@@ -305,7 +305,7 @@ class ClientSession(object):
 
 
     def terminate(self):
-        terminate_msg = Message.CLIENT_TERMINATE
+        terminate_msg = Message.client_terminate
         terminate_mac = self.get_mac(terminate_msg)
         self.send(terminate_msg + terminate_mac)
 
@@ -317,7 +317,7 @@ class ClientSession(object):
 
     def send(self, data):
         """ Exposed externally to consumers. """
-        msg = six.int2byte(Message.COMMAND) + encode_varint(self.c_seq) + data
+        msg = six.int2byte(Message.command) + encode_varint(self.c_seq) + data
         self._send(msg + self.get_mac(msg))
         self.c_seq += 1
 
@@ -343,12 +343,12 @@ class Session(object):
 
         # Setup self.handlers dict
         self.handlers = {
-            Message.CLIENT_HELLO: self.respond_to_client_hello,
-            Message.SA_PROPOSAL: self.respond_to_sa_proposal,
-            Message.COMMAND: self.respond_to_command,
-            Message.REKEY: self.respond_to_rekey,
-            Message.REKEY_CONFIRM: self.respond_to_rekey_confirm,
-            Message.CLIENT_TERMINATE: self.respond_to_client_terminate,
+            Message.client_hello: self.respond_to_client_hello,
+            Message.sa_proposal: self.respond_to_sa_proposal,
+            Message.command: self.respond_to_command,
+            Message.rekey: self.respond_to_rekey,
+            Message.rekey_confirm: self.respond_to_rekey_confirm,
+            Message.client_terminate: self.respond_to_client_terminate,
         }
 
 
@@ -360,14 +360,14 @@ class Session(object):
         """
         msg_type_byte = six.byte2int(message)
         transition_map = {
-            ServerState.inactive: [Message.CLIENT_HELLO],
-            ServerState.wait_for_sa_proposal: [Message.SA_PROPOSAL],
+            ServerState.inactive: [Message.client_hello],
+            ServerState.wait_for_sa_proposal: [Message.sa_proposal],
             ServerState.established: [
-                Message.COMMAND,
-                Message.REKEY,
-                Message.CLIENT_TERMINATE,
+                Message.command,
+                Message.rekey,
+                Message.client_terminate,
             ],
-            ServerState.rekey: [Message.REKEY_CONFIRM],
+            ServerState.rekey: [Message.rekey_confirm],
         }
 
 
@@ -407,7 +407,7 @@ class Session(object):
         if not client_version == self.version:
             # reply with supported version, and copy of client's message
             print('Unsupported version of client hello')
-            msg = (six.int2byte(Message.VERSION_NOT_SUPPORTED) +
+            msg = (six.int2byte(Message.version_not_supported) +
                 encode_version(self.version) +
                 message[:-8])
             msg_with_mac = msg + self.get_mac(msg)
@@ -418,7 +418,7 @@ class Session(object):
         self.R_a = rng(8)
         self.R_b = message[1:9]
 
-        msg = six.int2byte(Message.SERVER_HELLO) + self.R_a
+        msg = six.int2byte(Message.server_hello) + self.R_a
         mac = self.get_mac(msg, self.R_b)
         self.state = ServerState.wait_for_sa_proposal
         self._send(msg + mac)
@@ -433,7 +433,7 @@ class Session(object):
         """ Called from AuthChannel when it needs to send data through this session. This method adds type,
         sequence number and MAC.
         """
-        msg = six.int2byte(Message.REPLY) + encode_varint(self.s_seq) + data
+        msg = six.int2byte(Message.reply) + encode_varint(self.s_seq) + data
         self._send(msg + self.get_mac(msg))
         self.s_seq += 1
 
@@ -511,7 +511,7 @@ class Session(object):
             'mac': selected_mac,
             'mac_len': suggested_mac_len,
         }
-        response = six.int2byte(Message.SA) + msgpack.dumps(sa)
+        response = six.int2byte(Message.sa) + msgpack.dumps(sa)
         msg = response + self.get_mac(response)
         self._send(msg)
 
@@ -542,7 +542,7 @@ class Session(object):
         client_pubkey = msg
         pkey = PrivateKey.generate()
         self.new_master_key = crypto_scalarmult(pkey._private_key, client_pubkey)
-        msg = six.int2byte(Message.REKEY_RESPONSE) + pkey.public_key._public_key
+        msg = six.int2byte(Message.rekey_response) + pkey.public_key._public_key
         self.state = ServerState.rekey
         full_msg = msg + self.get_mac(msg)
         self._send(full_msg)
@@ -564,7 +564,7 @@ class Session(object):
 
         # Update shared_key
         self.shared_key = self.new_master_key
-        msg = six.int2byte(Message.REKEY_COMPLETED)
+        msg = six.int2byte(Message.rekey_completed)
         self.state = ServerState.rekey_confirmed
         full_msg = msg + self.get_mac(msg, key=self.shared_key)
         self._send(full_msg)
