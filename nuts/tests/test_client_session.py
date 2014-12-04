@@ -115,8 +115,8 @@ class SATest(BaseTestCase):
             cbor.dumps([]),
             # missing parameters
             cbor.dumps({}),
-            cbor.dumps({'mac': 'sha3_256'})
-            cbor.dumps({'mac_len': 8})
+            cbor.dumps({'mac': 'sha3_256'}),
+            cbor.dumps({'mac_len': 8}),
             # invalid mac
             cbor.dumps({'mac': 'foobar', 'mac_len': 8}),
             cbor.dumps({'mac': -1, 'mac_len': 8}),
