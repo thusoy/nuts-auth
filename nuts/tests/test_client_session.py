@@ -7,12 +7,14 @@ import hashlib
 import sha3
 import six
 import cbor
+from nacl.public import PrivateKey
+from nacl.c import crypto_scalarmult
 
 def handshake_mac(*args):
     print('Test MACing %s (%d) with key %s (%d)' % (
         ascii_bin(b''.join(args[1:])),
         len(b''.join(args[1:])),
-        args[0],
+        ascii_bin(args[0]),
         len(args[0])))
     return hashlib.sha3_256(b''.join(args)).digest()[:8]
 
@@ -131,9 +133,7 @@ class SATest(BaseTestCase):
             self.assertEqual(self.session.state, ClientState.wait_for_sa)
 
 
-
-
-class ReplyTest(BaseTestCase):
+class EstablishedSessionTestCase(BaseTestCase):
 
     def setUp(self):
         self.channel = DummyAuthChannel(self.shared_secret)
@@ -153,6 +153,8 @@ class ReplyTest(BaseTestCase):
     def get_mac(self, data):
         return hashlib.sha3_256(self.session_key + data).digest()[:8]
 
+
+class ReplyTest(EstablishedSessionTestCase):
 
     def test_server_message(self):
         msg = b'\x82\x00' + b'Hello, earthling'
@@ -186,3 +188,87 @@ class ReplyTest(BaseTestCase):
         mac = self.get_mac(msg)
         self.session.handle(msg + mac)
         self.assertEqual(self.session.s_seq, 0)
+
+
+class RekeyTest(EstablishedSessionTestCase):
+
+    def test_sends_valid_rekey_message(self):
+        self.session.send_rekey()
+        rekey_msg = self.channel.sent_messages.pop(0).msg
+        self.assert_message_type(rekey_msg, 0x03)
+        self.assertEqual(len(rekey_msg), 42)
+        # Sequence number should be 0
+        self.assertEqual(six.byte2int(rekey_msg[1:]), 0x00)
+        expected_mac = self.get_mac(rekey_msg[:-8])
+        self.assertEqual(rekey_msg[-8:], expected_mac)
+
+
+    @unittest.skip('Skip until we can run a full client vs. server UDP test')
+    def test_rekey(self):
+        old_shared_key = self.channel.shared_key
+        self.session.rekey()
+        self.assertNotEqual(self.channel.shared_key, old_shared_key)
+
+
+class RekeyResponseTest(EstablishedSessionTestCase):
+
+    def setUp(self):
+        super(RekeyResponseTest, self).setUp()
+        self.session.send_rekey()
+        rekey_msg = self.channel.sent_messages.pop(0).msg
+        self.client_pubkey = rekey_msg[2:-8]
+
+
+    def test_responds_to_valid_rekey_response(self):
+        pkey = PrivateKey.generate()
+        msg = b'\x83\x00' + pkey.public_key._public_key
+        mac = self.get_mac(msg)
+        response = self.get_response(msg + mac).msg
+        self.assert_message_type(response, 0x04)
+        self.assertEqual(len(response), 9)
+        shared_key = crypto_scalarmult(pkey._private_key, self.client_pubkey)
+        expected_mac = hashlib.sha3_256(shared_key + response[:-8]).digest()[:8]
+        self.assertEqual(response[-8:], expected_mac)
+        self.assertEqual(self.session.state, ClientState.wait_for_rekey_complete)
+
+
+    def test_rekey_response_invalid_length(self):
+        msg = b'\x83\x00'
+        mac = self.get_mac(msg)
+        self.session.handle(msg + mac)
+        self.assertEqual(self.session.s_seq, 0)
+
+
+    def test_rekey_response_invalid_mac(self):
+        msg = b'\x83\x00' + b'\x00'*40
+        self.session.handle(msg)
+        self.assertEqual(self.session.s_seq, 0)
+
+
+    def test_rekey_response_bad_sequence_number(self):
+        msg = b'\x83\x01' + b'\x00'*32
+        mac = self.get_mac(msg)
+        self.session.handle(msg + mac)
+        self.assertEqual(self.session.s_seq, 0)
+
+
+class RekeyCompleteTest(EstablishedSessionTestCase):
+
+    def setUp(self):
+        super(RekeyCompleteTest, self).setUp()
+        self.session.send_rekey()
+        rekey_msg = self.channel.sent_messages.pop(0).msg
+        self.client_pubkey = rekey_msg[2:-8]
+        pkey = PrivateKey.generate()
+        msg = b'\x83\x00' + pkey.public_key._public_key
+        mac = self.get_mac(msg)
+        response = self.get_response(msg + mac).msg
+        self.new_shared_key = crypto_scalarmult(pkey._private_key, self.client_pubkey)
+
+
+    def test_response_to_rekey_complete(self):
+        msg = b'\x84'
+        mac = hashlib.sha3_256(self.new_shared_key + msg).digest()[:8]
+        self.session.handle(msg + mac)
+        self.assertEqual(self.channel.shared_key, self.new_shared_key)
+        self.assertEqual(self.session.state, ClientState.terminated)

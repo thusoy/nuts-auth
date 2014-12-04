@@ -292,6 +292,7 @@ class RekeyTest(EstablishedSessionTestCase):
         pkey = PrivateKey.generate()
         msg = b'\x03' + pkey.public_key._public_key
         response = self.send_with_mac(msg).msg
+        # TODO: rekeys must have sequence numbers
         self.assert_correct_mac(response)
         self.assert_message_type(response, 0x83)
         server_pubkey = response[1:-self.mac_len]

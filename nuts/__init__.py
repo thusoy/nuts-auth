@@ -29,7 +29,7 @@ def handshake_mac(*args):
     print('Client MACing %s (%d) with key %s (%d)' % (
         ascii_bin(b''.join(args[1:])),
         len(b''.join(args[1:])),
-        args[0],
+        ascii_bin(args[0]),
         len(args[0])))
     return hashlib.sha3_256(b''.join(args)).digest()[:8]
 
@@ -47,6 +47,8 @@ class ClientState(Enum):
     wait_for_sa = 2
     established = 3
     rekey = 4
+    wait_for_rekey_complete = 5
+    terminated = 6
 
 
 class Message(IntEnum):
@@ -179,6 +181,8 @@ class ClientSession(object):
             Message.sa: self.respond_to_sa,
             Message.reply: self.respond_to_server_message,
             Message.server_terminate: self.respond_to_server_terminate,
+            Message.rekey_response: self.respond_to_rekey_response,
+            Message.rekey_completed: self.respond_to_rekey_completed,
         }
 
 
@@ -238,11 +242,74 @@ class ClientSession(object):
             print('mac %s not supported by this client' % sa['mac'])
             return
 
-
         self.init_session_mac(key=self.session_key, func_name=sa['mac'], length=sa['mac_len'])
         self.s_seq = self.c_seq = 0
         self.state = ClientState.established
         print('Session established')
+
+
+    def rekey(self):
+        self.send_rekey()
+        while self.state != ClientState.terminated:
+            data, sender = self.channel.read_data()
+            if sender != self.id_a:
+                continue
+            self.handle(data)
+        # Initialize new session with the same session object
+        self.connect()
+
+
+    def send_rekey(self):
+        self.pkey = PrivateKey.generate()
+        msg = six.int2byte(Message.rekey) + encode_varint(self.c_seq) + self.pkey.public_key._public_key
+        mac = self.get_mac(msg)
+        self.c_seq += 1
+        self._send(msg + mac)
+        self.state = ClientState.rekey
+
+
+    def respond_to_rekey_response(self, data):
+        # Verify length
+        if len(data) != 41 + len(encode_varint(self.s_seq)):
+            print('Invalid length of rekey response')
+            return
+
+        # Verify MAC
+        if not self.verify_mac(data):
+            print('Invalid MAC on rekey response')
+            return
+
+        # Verify seqnum
+        if not self.sequence_number_matches(data, self.s_seq):
+            print('Invalid sequence number on rekey response')
+            return
+
+        # Compute new shared key
+        server_pubkey = data[2:-self._mac_length]
+        self.new_master_key = crypto_scalarmult(self.pkey._private_key, server_pubkey)
+        msg = six.int2byte(Message.rekey_confirm)
+        mac = self._mac_func(self.new_master_key + msg).digest()[:self._mac_length]
+        self._send(msg + mac)
+        self.s_seq += 1
+        self.state = ClientState.wait_for_rekey_complete
+
+
+    def respond_to_rekey_completed(self, data):
+        # Verify length
+        if len(data) != 1 + self._mac_length:
+            print('Invalid length of rekey completed, was %d' % len(data))
+            return
+
+        # Verify MAC
+        expected_mac = self._mac_func(self.new_master_key + data[:-self._mac_length]).digest()[:self._mac_length]
+        if not constant_time_compare(data[-self._mac_length:], expected_mac):
+            print('Invalid MAC on rekey completed')
+            return
+
+        self.channel.shared_key = self.new_master_key
+        self.state = ClientState.terminated
+        del self.new_master_key
+        del self.pkey
 
 
     def verify_mac(self, message):
@@ -262,23 +329,37 @@ class ClientSession(object):
             return
 
         # Verify sequence number
-        seqnum_bytes = []
-        for byte in six.iterbytes(message[1:]):
-            seqnum_bytes.append(byte)
-            if byte >> 7 == 0:
-                break
-        server_seqnum = decode_varint(seqnum_bytes)
-        if not server_seqnum == self.s_seq:
-            print('Not expected sequence number, expected %d, was %d' % (self.s_seq, server_seqnum))
+        if not self.sequence_number_matches(message, self.s_seq):
+            print('Not expected sequence number, expected %d' % self.s_seq)
             # TODO: If future sequence number, either store it or deliver it to app immediately,
             # depending on config
             return
 
         self.s_seq += 1
 
-        data = message[1+len(seqnum_bytes):-self._mac_length]
+        data = self.extract_message_data(message)
         self.deliver(data)
         print('Message added to _messages: %s' % self._messages)
+
+
+    def extract_message_data(self, data):
+        """ Strips type, sequence numbers and MAC and returns the upper-layer protocol data. """
+        seqnum_bytes = 0
+        for byte in six.iterbytes(data[1:]):
+            seqnum_bytes += 1
+            if byte >> 7 == 0:
+                break
+        return data[1+seqnum_bytes:-self._mac_length]
+
+
+    def sequence_number_matches(self, data, expected_seqnum):
+        seqnum_bytes = []
+        for byte in six.iterbytes(data[1:]):
+            seqnum_bytes.append(byte)
+            if byte >> 7 == 0:
+                break
+        seqnum = decode_varint(seqnum_bytes)
+        return seqnum == expected_seqnum
 
 
     def deliver(self, data):
@@ -305,6 +386,8 @@ class ClientSession(object):
             ClientState.wait_for_server_hello: [Message.server_hello],
             ClientState.wait_for_sa: [Message.sa],
             ClientState.established: [Message.reply, Message.server_terminate],
+            ClientState.rekey: [Message.rekey_response],
+            ClientState.wait_for_rekey_complete: [Message.rekey_completed],
         }
         valid_transitions = transition_map.get(self.state, [])
         if not msg_type_byte in valid_transitions:
@@ -689,8 +772,15 @@ class DummyAuthChannel(AuthChannel):
     def __init__(self, *args, **kwargs):
         super(DummyAuthChannel, self).__init__(*args, **kwargs)
         self.sent_messages = []
+        self.messages_to_receive = []
 
 
     def send_data(self, data, address):
         print('Sending data %s to %s' % (ascii_bin(data), address))
         self.sent_messages.append(AuthenticatedMessage(address, data))
+
+
+    def read_data(self):
+        """ Return pre-filled replies, or None. """
+        if self.messages_to_receive:
+            return self.messages_to_receive.pop(0)
