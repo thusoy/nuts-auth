@@ -26,6 +26,11 @@ import sys
 AuthenticatedMessage = namedtuple('Message', ['sender', 'msg'])
 
 def handshake_mac(*args):
+    print('Client MACing %s (%d) with key %s (%d)' % (
+        ascii_bin(b''.join(args[1:])),
+        len(b''.join(args[1:])),
+        args[0],
+        len(args[0])))
     return hashlib.sha3_256(b''.join(args)).digest()[:8]
 
 
@@ -161,6 +166,8 @@ class AuthChannel(object):
 
 class ClientSession(object):
 
+    version = b'1.0'
+
     def __init__(self, id_a, shared_key, channel):
         self.id_a = id_a
         self.shared_key = shared_key
@@ -168,7 +175,7 @@ class ClientSession(object):
         self._messages = []
 
         self.handlers = {
-            Message.server_hello: self.do_sa_proposal,
+            Message.server_hello: self.respond_to_server_hello,
             Message.sa: self.establish,
             Message.reply: self.respond_to_server_message,
             Message.server_terminate: self.respond_to_server_terminate,
@@ -283,22 +290,27 @@ class ClientSession(object):
 
     def do_client_hello(self):
         self.R_b = rng(8)
-        msg = six.int2byte(Message.client_hello) + encode_version(b'1.0') + self.R_b
+        msg = six.int2byte(Message.client_hello) + encode_version(self.version) + self.R_b
         mac = handshake_mac(self.shared_key, msg)
         self._send(msg + mac)
         self.state = ClientState.wait_for_server_hello
 
 
-    def do_sa_proposal(self, data):
-        print('Handling SERVER HELLO')
-        print(ascii_bin(data))
+    def respond_to_server_hello(self, data):
+        # Verify length
+        if not len(data) == 17:
+            print('Invalid length of SERVER_HELLO')
+            return
 
+        # Verify MAC
         expected_mac = handshake_mac(self.shared_key, data[:-8], self.R_b)
         if not data[-8:] == expected_mac:
-            raise NutsConnectionError('Invalid mac received from server, terminating...')
+            print('Invalid mac on SERVER_HELLO')
+            return
+
         self.R_a = data[1:-8]
         sa_msg = six.int2byte(Message.sa_proposal)
-        self.session_key = HKDF(self.R_a + self.R_b, self.shared_key).expand(info=b'1.0', length=16)
+        self.session_key = HKDF(self.R_a + self.R_b, self.shared_key).expand(info=self.version, length=16)
         print('Session key: %s' % ascii_bin(self.session_key))
         sa_mac = handshake_mac(self.shared_key, sa_msg, self.R_a)
         self._send(sa_msg + sa_mac)
@@ -631,7 +643,7 @@ class UDPAuthChannel(AuthChannel):
         print("I'm now %s" % (self.sock.getsockname(),))
 
 
-    def read_data(self, *args):
+    def read_data(self):
         data, sender = self.sock.recvfrom(1024)
         print('Received data: %s from %s' % (ascii_bin(data), sender))
         return data, sender
