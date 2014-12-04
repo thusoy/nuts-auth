@@ -73,7 +73,7 @@ NtRp31
 g18
 I1
 sg19
-I76
+I74
 sg20
 I375
 sg21
@@ -81,11 +81,11 @@ I0
 sg22
 I2
 sg23
-I122
+I124
 sg24
 I28
 sbssg25
-S'XNjc \x80\xd3\xbc\x97ak"\xa4\nn\xc7'
+S'AVQ\xb0\xe8\xd8\xd2\x17\t\xa5\xe4\xcf\xb7:\xb1\xc8'
 p33
 ssS'nuts_varint'
 p34
@@ -113,13 +113,13 @@ I14
 sg21
 I0
 sg22
-I0
+I1
 sg23
-I7
+I1
 sg24
-I4
+I1
 sbssg25
-S'\xde\xd0\xec\xb55\xa6\xc3\xaf\x95F\x96m\xf1j\xc4\x97'
+S'\xf5\xb8\x10\xa9Q\x8f\x8e\xfb\x00\x8f\xd7Q\n\x13\xcb{'
 p41
 ssS'nuts_hkdf'
 p42
