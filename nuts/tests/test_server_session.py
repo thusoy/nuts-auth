@@ -205,10 +205,15 @@ class SAProposalTest(BaseMessageTestCase):
 
 
     def test_sa_proposal_malformed_cbor_data(self):
-        msg = b'\x01' + b'\xff\x00'
-        mac = self.get_mac(msg, self.R_a)
-        response = self.get_response(msg + mac)
-        self.assertIsNone(response)
+        test_data = [
+            b'\xff\x00',
+            cbor.dumps("Hello, world"),
+        ]
+        for data in test_data:
+            msg = b'\x01' + data
+            mac = self.get_mac(msg, self.R_a)
+            response = self.get_response(msg + mac)
+            self.assertIsNone(response)
 
 
     def test_sa_proposal_invalid_type(self):
