@@ -132,7 +132,7 @@ class SAProposalTest(BaseMessageTestCase):
         self.assert_correct_mac(response)
         self.assert_message_type(response, 0x81)
 
-        sa = cbor.loads(response[1:-self.mac_len])
+        sa = cbor.loads(response[1:-8])
 
         # Should have selected Keccak-256 as default
         self.assertEqual(sa['mac'], 'sha3_256')
@@ -182,8 +182,8 @@ class SAProposalTest(BaseMessageTestCase):
             msg = b'\x01' + cbor.dumps({'mac_len': length})
             mac = self.get_mac(msg, self.R_a)
             response = self.get_response(msg + mac).msg
-            print(response)
-            sa = cbor.loads(response[1:-self.mac_len])
+            print(ascii_bin(response[1:]))
+            sa = cbor.loads(response[1:-8])
             self.assertEqual(sa['mac'], 'sha3_256')
             self.assertEqual(sa['mac_len'], length)
 
@@ -227,7 +227,7 @@ class SAProposalTest(BaseMessageTestCase):
 class CommandTest(EstablishedSessionTestCase):
 
     def assert_expecting_seqnum(self, number):
-        self.assertEqual(self.channel.sessions['source'].c_seq, number)
+        self.assertEqual(self.channel.sessions['source'].other_seq, number)
 
 
     def test_command(self):

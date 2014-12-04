@@ -100,7 +100,7 @@ class SATest(BaseTestCase):
         msg = b'\x81' + cbor.dumps({'mac': 'sha3_256', 'mac_len': 8})
         mac = handshake_mac(self.session_key, msg)
         self.session.handle(msg + mac)
-        self.assertEqual(self.session.s_seq, 0)
+        self.assertEqual(self.session.other_seq, 0)
         self.assertEqual(self.session.state, ClientState.established)
 
 
@@ -162,18 +162,18 @@ class ReplyTest(EstablishedSessionTestCase):
         msg = b'\x82\x00' + b'Hello, earthling'
         mac = self.get_mac(msg)
         self.session.handle(msg + mac)
-        self.assertEqual(self.session.s_seq, 1)
+        self.assertEqual(self.session.other_seq, 1)
 
         msg = b'\x82\x01' + b'Hello, again'
         mac = self.get_mac(msg)
         self.session.handle(msg + mac)
-        self.assertEqual(self.session.s_seq, 2)
+        self.assertEqual(self.session.other_seq, 2)
 
 
     def test_server_message_invalid_mac(self):
         msg = b'\x82\x00' + b'\x00'*8
         self.session.handle(msg)
-        self.assertEqual(self.session.s_seq, 0)
+        self.assertEqual(self.session.other_seq, 0)
 
 
     def test_server_message_replay(self):
@@ -181,7 +181,7 @@ class ReplyTest(EstablishedSessionTestCase):
         mac = self.get_mac(msg)
         self.session.handle(msg + mac)
         self.session.handle(msg + mac)
-        self.assertEqual(self.session.s_seq, 1)
+        self.assertEqual(self.session.other_seq, 1)
 
 
     def test_server_message_invalid_length(self):
@@ -189,7 +189,7 @@ class ReplyTest(EstablishedSessionTestCase):
         msg = b'\x82'
         mac = self.get_mac(msg)
         self.session.handle(msg + mac)
-        self.assertEqual(self.session.s_seq, 0)
+        self.assertEqual(self.session.other_seq, 0)
 
 
 class RekeyTest(EstablishedSessionTestCase):
@@ -238,20 +238,20 @@ class RekeyResponseTest(EstablishedSessionTestCase):
         msg = b'\x83\x00'
         mac = self.get_mac(msg)
         self.session.handle(msg + mac)
-        self.assertEqual(self.session.s_seq, 0)
+        self.assertEqual(self.session.other_seq, 0)
 
 
     def test_rekey_response_invalid_mac(self):
         msg = b'\x83\x00' + b'\x00'*40
         self.session.handle(msg)
-        self.assertEqual(self.session.s_seq, 0)
+        self.assertEqual(self.session.other_seq, 0)
 
 
     def test_rekey_response_bad_sequence_number(self):
         msg = b'\x83\x01' + b'\x00'*32
         mac = self.get_mac(msg)
         self.session.handle(msg + mac)
-        self.assertEqual(self.session.s_seq, 0)
+        self.assertEqual(self.session.other_seq, 0)
 
 
 class RekeyCompleteTest(EstablishedSessionTestCase):
