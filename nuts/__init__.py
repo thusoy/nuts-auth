@@ -148,7 +148,7 @@ class AuthChannel(object):
         else:
             session = Session(message.sender, self.shared_key, self)
             self.sessions[message.sender] = session
-        response = session.handle(message.msg)
+        session.handle(message.msg)
         if session.state == ServerState.inactive:
             print('Terminating session with %s' % str(message.sender))
             del self.sessions[message.sender]
@@ -157,10 +157,6 @@ class AuthChannel(object):
             self.sessions = {}
             print('Session invalidated, shared key updated')
             self.shared_key = session.shared_key
-        if response:
-            msg = AuthenticatedMessage(message.sender, response)
-            self._messages.append(msg)
-            return msg
 
 
 class ClientSession(object):
@@ -246,7 +242,12 @@ class ClientSession(object):
         self.s_seq += 1
 
         data = message[1+len(seqnum_bytes):-self._mac_length]
-        self._messages.append(data)
+        self.deliver(data)
+        print('Message added to _messages: %s' % self._messages)
+
+
+    def deliver(self, data):
+        self._messages.append(AuthenticatedMessage(self.id_a, data))
 
 
     def respond_to_server_terminate(self, message):
@@ -254,6 +255,7 @@ class ClientSession(object):
 
 
     def receive(self):
+        """ Exposed to consumer to get incoming messages. """
         while not self._messages:
             data, sender = self.channel.read_data()
             if sender != self.id_a:
@@ -281,7 +283,7 @@ class ClientSession(object):
 
     def do_client_hello(self):
         self.R_b = rng(8)
-        msg = Message.client_hello + encode_version(b'1.0') + self.R_b
+        msg = six.int2byte(Message.client_hello) + encode_version(b'1.0') + self.R_b
         mac = handshake_mac(self.shared_key, msg)
         self._send(msg + mac)
         self.state = ClientState.wait_for_server_hello
@@ -295,7 +297,7 @@ class ClientSession(object):
         if not data[-8:] == expected_mac:
             raise NutsConnectionError('Invalid mac received from server, terminating...')
         self.R_a = data[1:-8]
-        sa_msg = Message.sa_proposal
+        sa_msg = six.int2byte(Message.sa_proposal)
         self.session_key = HKDF(self.R_a + self.R_b, self.shared_key).expand(info=b'1.0', length=16)
         print('Session key: %s' % ascii_bin(self.session_key))
         sa_mac = handshake_mac(self.shared_key, sa_msg, self.R_a)
@@ -303,9 +305,8 @@ class ClientSession(object):
         self.state = ClientState.wait_for_sa
 
 
-
     def terminate(self):
-        terminate_msg = Message.client_terminate
+        terminate_msg = six.int2byte(Message.client_terminate)
         terminate_mac = self.get_mac(terminate_msg)
         self.send(terminate_msg + terminate_mac)
 
@@ -337,9 +338,6 @@ class Session(object):
         self.shared_key = shared_key
         self.state = ServerState.inactive
         self.channel = channel
-
-        #: A queue of messages received that haven't been consumed yet
-        self._messages = []
 
         # Setup self.handlers dict
         self.handlers = {
@@ -422,7 +420,6 @@ class Session(object):
         mac = self.get_mac(msg, self.R_b)
         self.state = ServerState.wait_for_sa_proposal
         self._send(msg + mac)
-        return msg + mac
 
 
     def _send(self, data):
@@ -522,7 +519,6 @@ class Session(object):
         self.c_seq = self.s_seq = 0
 
         self.state = ServerState.established
-        return msg
 
 
     def respond_to_rekey(self, message):
@@ -546,7 +542,6 @@ class Session(object):
         self.state = ServerState.rekey
         full_msg = msg + self.get_mac(msg)
         self._send(full_msg)
-        return full_msg
 
 
     def respond_to_rekey_confirm(self, message):
@@ -568,11 +563,14 @@ class Session(object):
         self.state = ServerState.rekey_confirmed
         full_msg = msg + self.get_mac(msg, key=self.shared_key)
         self._send(full_msg)
-        return full_msg
 
 
     def respond_to_message_type_not_supported(self, message):
         raise NotImplemented()
+
+
+    def deliver(self, message):
+        self.channel._messages.append(AuthenticatedMessage(self.id_b, message))
 
 
     def respond_to_command(self, message):
@@ -606,7 +604,7 @@ class Session(object):
 
         # Strip seqnum
         msg = msg[len(seqnum_bytes):]
-        self._send(msg)
+        self.deliver(msg)
 
 
 class UDPAuthChannel(AuthChannel):
@@ -642,6 +640,11 @@ class UDPAuthChannel(AuthChannel):
 class DummyAuthChannel(AuthChannel):
     """ Only return stuff locally, probably only useful for testing. """
 
+    def __init__(self, *args, **kwargs):
+        super(DummyAuthChannel, self).__init__(*args, **kwargs)
+        self.sent_messages = []
+
+
     def send_data(self, data, address):
         print('Sending data %s to %s' % (ascii_bin(data), address))
-
+        self.sent_messages.append(AuthenticatedMessage(address, data))

@@ -7,5 +7,5 @@ channel = UDPAuthChannel('secret')
 with channel.connect( ('127.0.0.1', 8001) ) as session:
     session.send('Take 4 pics!')
     for i in range(4):
-        img = session.receive()
-        print '******************* Recieved img: %s' % img
+        msg = session.receive()
+        print '******************* Received img: %s' % msg.msg

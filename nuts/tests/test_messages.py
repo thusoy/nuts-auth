@@ -20,7 +20,6 @@ class BaseMessageTestCase(unittest.TestCase):
         self.assertEqual(six.byte2int(response), expected_type)
 
 
-
     def get_mac(self, *args, **kwargs):
         algo = kwargs.get('algo', self.mac)
         length = kwargs.get('length', self.mac_len)
@@ -33,7 +32,9 @@ class BaseMessageTestCase(unittest.TestCase):
 
 
     def get_response(self, msg):
-        return self.channel.handle_message(AuthenticatedMessage('source', msg))
+        self.channel.handle_message(AuthenticatedMessage('source', msg))
+        if self.channel.sent_messages:
+            return self.channel.sent_messages.pop(0)
 
 
     def send_with_mac(self, msg, **kwargs):
