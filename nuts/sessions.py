@@ -488,7 +488,7 @@ class ServerSession(Session):
 
     def respond_to_rekey(self, message):
         # Verify length
-        if not len(message) == 33 + self._mac_length:
+        if not len(message) == 34 + self._mac_length:
             print('Invalid length of rekey')
             return
 
@@ -498,15 +498,19 @@ class ServerSession(Session):
             print('Invalid MAC on rekey')
             return
 
-        # TODO: Needs to have verifiable seqnum to prevent DoS due to repeating the rekey msg
+        # Verify sequence number
+        if not self.sequence_number_matches(msg):
+            print('Invalid sequence number on rekey')
+            return
 
-        client_pubkey = msg[1:]
+        client_pubkey = msg[2:]
         self.pkey = PrivateKey.generate()
         self.new_master_key = self.derive_shared_key(client_pubkey)
-        msg = six.int2byte(Message.rekey_response) + self.pkey.public_key._public_key
+        msg = six.int2byte(Message.rekey_response) + encode_varint(self.my_seq) + self.pkey.public_key._public_key
         self.state = ServerState.rekey
         full_msg = msg + self.get_mac(msg)
         self._send(full_msg)
+        self.my_seq += 1
 
 
     def respond_to_rekey_confirm(self, message):

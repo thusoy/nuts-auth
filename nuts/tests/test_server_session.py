@@ -291,12 +291,12 @@ class RekeyTest(EstablishedSessionTestCase):
 
     def test_rekey(self):
         pkey = PrivateKey.generate()
-        msg = b'\x03' + pkey.public_key._public_key
+        msg = b'\x03\x00' + pkey.public_key._public_key
         response = self.send_with_mac(msg).msg
-        # TODO: rekeys must have sequence numbers
+        self.assertEqual(len(response), 34 + self.mac_len)
         self.assert_correct_mac(response)
         self.assert_message_type(response, 0x83)
-        server_pubkey = response[1:-self.mac_len]
+        server_pubkey = response[2:-self.mac_len]
         new_shared_secret = crypto_scalarmult(pkey._private_key, server_pubkey)
 
         # Send confirm
@@ -310,20 +310,20 @@ class RekeyTest(EstablishedSessionTestCase):
 
     def test_rekey_invalid_length(self):
         for pubkey in [b'\x00', b'\x00'*34]:
-            msg = b'\x03' + pubkey
+            msg = b'\x03\x00' + pubkey
             response = self.send_with_mac(msg)
             self.assertIsNone(response)
 
 
     def test_rekey_invalid_mac(self):
-        msg = b'\x03' + b'\x00'*32
+        msg = b'\x03\x00' + b'\x00'*32
         mac = b'\x00'*self.mac_len
         response = self.get_response(msg + mac)
         self.assertIsNone(response)
 
 
     def test_rekey_confirm_invalid_length(self):
-        msg = b'\x03' + b'\x00'*32
+        msg = b'\x03\x00' + b'\x00'*32
         response = self.send_with_mac(msg).msg
         self.assert_message_type(response, 0x83)
 
@@ -332,8 +332,14 @@ class RekeyTest(EstablishedSessionTestCase):
         self.assertIsNone(response)
 
 
+    def test_rekey_invalid_sequence_number(self):
+        msg = b'\x03\x01' + b'\x00'*32
+        response = self.send_with_mac(msg)
+        self.assertIsNone(response)
+
+
     def test_rekey_confirm_invalid_mac(self):
-        msg = b'\x03' + b'\x00'*32
+        msg = b'\x03\x00' + b'\x00'*32
         response = self.send_with_mac(msg).msg
         self.assert_message_type(response, 0x83)
 
