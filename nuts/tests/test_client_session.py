@@ -160,6 +160,11 @@ class ReplyTest(BaseTestCase):
         self.session.handle(msg + mac)
         self.assertEqual(self.session.s_seq, 1)
 
+        msg = b'\x82\x01' + b'Hello, again'
+        mac = self.get_mac(msg)
+        self.session.handle(msg + mac)
+        self.assertEqual(self.session.s_seq, 2)
+
 
     def test_server_message_invalid_mac(self):
         msg = b'\x82\x00' + b'\x00'*8
@@ -173,3 +178,11 @@ class ReplyTest(BaseTestCase):
         self.session.handle(msg + mac)
         self.session.handle(msg + mac)
         self.assertEqual(self.session.s_seq, 1)
+
+
+    def test_server_message_invalid_length(self):
+        # Missing seqnum
+        msg = b'\x82'
+        mac = self.get_mac(msg)
+        self.session.handle(msg + mac)
+        self.assertEqual(self.session.s_seq, 0)

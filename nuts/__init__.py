@@ -251,9 +251,9 @@ class ClientSession(object):
 
 
     def respond_to_server_message(self, message):
-        # Verify length
-        if not self._mac_length + 1 <= len(message) <= 2**16:
-            print('Invalid length of reply')
+        # Verify length (type + minimum 1 byte of seqnum + mac)
+        if not self._mac_length + 2 <= len(message) <= 2**16:
+            print('Invalid length of reply (was %d)' % len(message))
             return
 
         # Verify MAC
