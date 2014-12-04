@@ -1,6 +1,7 @@
 import unittest
 
 from nuts import encode_version, decode_version
+from nuts.varint import encode_varint, decode_varint
 
 class NutsCoreTest(unittest.TestCase):
 
@@ -27,6 +28,32 @@ class NutsCoreTest(unittest.TestCase):
         for invalid_version in [b'aa', b'\x00\x00', b'']:
             print(invalid_version)
             self.assertRaises(ValueError, decode_version, invalid_version)
+
+
+    def test_varint_encode(self):
+        tests = [
+            (0, b'\x00'),
+            (1, b'\x01'),
+            (127, b'\x7f'),
+            (128, b'\x81\x00'),
+            (16383, b'\xff\x7f'),
+            (16384, b'\x81\x80\x00'),
+        ]
+        for integer, bytes in tests:
+            self.assertEqual(encode_varint(integer), bytes)
+
+
+    def test_varint_decode(self):
+        tests = [
+            (b'\x00', 0),
+            (b'\x01', 1),
+            (b'\x7f', 127),
+            (b'\x81\x00', 128),
+            (b'\xff\x7f', 16383),
+            (b'\x81\x80\x00', 16384),
+        ]
+        for bytes, integer in tests:
+            self.assertEqual(decode_varint(bytes), integer)
 
 
 if __name__ == '__main__':
