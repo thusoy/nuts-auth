@@ -133,25 +133,43 @@ class SATest(BaseTestCase):
 
 
 
-#class ReplyTest(BaseTestCase):
-#
-#    def setUp(self):
-#        self.channel = DummyAuthChannel(self.shared_secret)
-#        self.session = ClientSession('source', self.channel)
-#        self.session.do_client_hello()
-#        R_b = self.channel.sent_messages.pop(0).msg[2:-8]
-#        server_hello = b'\x80' + b'\x00'*8
-#        server_hello_mac = handshake_mac(self.shared_secret, server_hello, R_b)
-#        self.session.handle(server_hello + server_hello_mac)
-#        self.channel.sent_messages.pop(0)
-#        sa = b'\x81' + cbor.dumps({'mac': 'sha3_256', 'mac_len': 8})
-#        self.session_key = HKDF(b'\x00'*8 + R_b, self.shared_secret).expand(info=b'1.0', length=16)
-#        sa_mac = handshake_mac(self.session_key, sa)
-#        self.session.handle(sa + sa_mac)
-#        self.channel.sent_messages.pop(0)
-#
-#
-#    def test_server_message(self):
-#        msg = b'\x82\x00' + b'Hello, earthling'
-#        self.session.handle(msg)
-#        self.assertEqual(self.session.s_seq,)
+class ReplyTest(BaseTestCase):
+
+    def setUp(self):
+        self.channel = DummyAuthChannel(self.shared_secret)
+        self.session = ClientSession('source', self.channel)
+        self.session.do_client_hello()
+        R_b = self.channel.sent_messages.pop(0).msg[2:-8]
+        server_hello = b'\x80' + b'\x00'*8
+        server_hello_mac = handshake_mac(self.shared_secret, server_hello, R_b)
+        self.session.handle(server_hello + server_hello_mac)
+        self.channel.sent_messages.pop(0)
+        sa = b'\x81' + cbor.dumps({'mac': 'sha3_256', 'mac_len': 8})
+        self.session_key = HKDF(b'\x00'*8 + R_b, self.shared_secret).expand(info=b'1.0', length=16)
+        sa_mac = handshake_mac(self.session_key, sa)
+        self.session.handle(sa + sa_mac)
+
+
+    def get_mac(self, data):
+        return hashlib.sha3_256(self.session_key + data).digest()[:8]
+
+
+    def test_server_message(self):
+        msg = b'\x82\x00' + b'Hello, earthling'
+        mac = self.get_mac(msg)
+        self.session.handle(msg + mac)
+        self.assertEqual(self.session.s_seq, 1)
+
+
+    def test_server_message_invalid_mac(self):
+        msg = b'\x82\x00' + b'\x00'*8
+        self.session.handle(msg)
+        self.assertEqual(self.session.s_seq, 0)
+
+
+    def test_server_message_replay(self):
+        msg = b'\x82\x00' + b'Hello, earthling'
+        mac = self.get_mac(msg)
+        self.session.handle(msg + mac)
+        self.session.handle(msg + mac)
+        self.assertEqual(self.session.s_seq, 1)

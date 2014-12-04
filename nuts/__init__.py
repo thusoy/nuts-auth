@@ -176,7 +176,7 @@ class ClientSession(object):
 
         self.handlers = {
             Message.server_hello: self.respond_to_server_hello,
-            Message.sa: self.establish,
+            Message.sa: self.respond_to_sa,
             Message.reply: self.respond_to_server_message,
             Message.server_terminate: self.respond_to_server_terminate,
         }
@@ -205,9 +205,7 @@ class ClientSession(object):
         print('State is now %s' % self.state)
 
 
-    def establish(self, data):
-        print('Handling SA')
-
+    def respond_to_sa(self, data):
         # Verify MAC
         expected_mac = handshake_mac(self.session_key, data[:-8])
         if not data[-8:] == expected_mac:
@@ -261,6 +259,7 @@ class ClientSession(object):
         # Verify MAC
         if not self.verify_mac(message):
             print('Invalid MAC on reply')
+            return
 
         # Verify sequence number
         seqnum_bytes = []
