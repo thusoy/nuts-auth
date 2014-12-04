@@ -11,7 +11,7 @@ from enum import Enum, IntEnum
 from functools import partial
 from nacl.c import crypto_scalarmult
 from nacl.public import PrivateKey
-import msgpack
+import cbor
 import binascii
 import hashlib
 import os
@@ -99,11 +99,11 @@ class AuthChannel(object):
     #: MACs supported by this satellite/server. Used in the SA negotiation, should be ordered
     #: by preference (strength).
     supported_macs = [
-        b'sha3_512',
-        b'sha3_384',
-        b'sha3_256',
-        b'hmac-sha1',
-        b'hmac-sha256',
+        'sha3_512',
+        'sha3_384',
+        'sha3_256',
+        'hmac-sha1',
+        'hmac-sha256',
     ]
 
 
@@ -207,11 +207,39 @@ class ClientSession(object):
 
     def establish(self, data):
         print('Handling SA')
+
+        # Verify MAC
         expected_mac = handshake_mac(self.session_key, data[:-8])
         if not data[-8:] == expected_mac:
-            raise NutsConnectionError('Invalid MAC on SA')
+            print('Invalid MAC on SA')
+            return
 
-        sa = msgpack.loads(data[1:-8])
+        # Verify that the cbored data has both 'mac' and 'mac_len' set to valid values
+        try:
+            sa = cbor.loads(data[1:-8])
+            if not isinstance(sa, dict):
+                print('SA not a dict')
+                return
+            print('SA: %s' % sa)
+        except:
+            print('Decoding cbored data from SA failed')
+            return
+        if not ('mac' in sa and 'mac_len' in sa):
+            print('SA missing mac and/or mac_len')
+            return
+        if not isinstance(sa['mac'], six.string_types):
+            print('SA mac not a string')
+            return
+        if not isinstance(sa['mac_len'], six.integer_types):
+            print('mac_len not an int')
+            return
+        if not 4 <= sa['mac_len'] <= 32:
+            print('mac_len outside range of 4-32 bytes')
+        if not sa['mac'] in self.channel.supported_macs:
+            print('mac %s not supported by this client' % sa['mac'])
+            return
+
+
         self.init_session_mac(key=self.session_key, func_name=sa['mac'], length=sa['mac_len'])
         self.s_seq = self.c_seq = 0
         self.state = ClientState.established
@@ -479,32 +507,38 @@ class Session(object):
 
         msg_data = {}
 
-        # Verify msgpacked data is valid (has 'macs' which is a list)
+        # Verify cbor data is valid (has 'macs' which is a list)
         if msg:
             try:
-                msg_data = msgpack.loads(msg)
-            except ValueError:
+                msg_data = cbor.loads(msg)
+            except:
+                print('Invalid cbor data given in sa proposal')
                 return
 
+        # Verify that the data loaded is a dict
+        if not isinstance(msg_data, dict):
+            print('SA proposal not a dict')
+            return
+
         # Verify that key 'macs' is a list
-        if not isinstance(msg_data.get(b'macs', []), list):
+        if not isinstance(msg_data.get('macs', []), list):
             print('Not list')
             return
 
         # Merge client parameters with defaults
-        suggested_macs = set([b'sha3_256'] + msg_data.get(b'macs', []))
+        suggested_macs = set(['sha3_256'] + msg_data.get('macs', []))
 
         # Pick the first MAC from supported_macs that's supported by both parties
-        selected_mac = b'sha3_256'
+        selected_mac = 'sha3_256'
         for supported_mac in AuthChannel.supported_macs:
             if supported_mac in suggested_macs:
                 selected_mac = supported_mac
                 break
 
         # Verify that suggested MAC length is valid int
-        suggested_mac_len = msg_data.get(b'mac_len', 8)
-        if not isinstance(suggested_mac_len, int):
-            print('mac_len not int')
+        suggested_mac_len = msg_data.get('mac_len', 8)
+        if not isinstance(suggested_mac_len, six.integer_types):
+            print('mac_len not int: %s' % type(suggested_mac_len))
             return
         if not 4 <= suggested_mac_len <= 32:
             print("suggested mac_len outside permitted range of 4-32 bytes")
@@ -520,11 +554,11 @@ class Session(object):
             'mac': selected_mac,
             'mac_len': suggested_mac_len,
         }
-        response = six.int2byte(Message.sa) + msgpack.dumps(sa)
+        response = six.int2byte(Message.sa) + cbor.dumps(sa)
         msg = response + self.get_mac(response)
         self._send(msg)
 
-        self.sa_mac = selected_mac.decode('ascii')
+        self.sa_mac = selected_mac
         self.sa_mac_len = suggested_mac_len
 
         # Initialize sequence numbers

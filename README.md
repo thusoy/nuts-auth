@@ -65,8 +65,10 @@ On each of the devices, install the necessary libraries to run the NUTS scheme:
     $ sudo apt-get update
     $ sudo apt-get install build-essential python-dev python-pip -y
     $ sudo pip install pysha3
+    $ sudo pip install -e .
 
-Transport for the example app uses `msgpack`, a lightweight binary (and soon IETF standardized) messaging format, comparable to JSON.
+Transport for the example app (see `sat.py` and `gs.py`) uses UDP.
+
 
 Troubleshooting
 ===============

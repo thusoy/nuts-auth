@@ -2,7 +2,7 @@ import unittest
 import hashlib
 import sha3 # pylint: disable=unused-import
 import six
-import msgpack
+import cbor
 from nacl.public import PrivateKey
 from nacl.c import crypto_scalarmult
 
@@ -60,7 +60,7 @@ class EstablishedSessionTestCase(BaseMessageTestCase):
         msg = b'\x00\x10' + self.R_b
         response = self.send_with_mac(msg, algo='sha3_256', length=8)
         self.R_a = response.msg[1:9]
-        msg = b'\x01' + msgpack.dumps({'macs': [self.mac], 'mac_len': self.mac_len})
+        msg = b'\x01' + cbor.dumps({'macs': [self.mac], 'mac_len': self.mac_len})
         mac = self.get_mac(msg, self.R_a, algo='sha3_256', length=8)
         self.get_response(msg + mac)
         self.session_key = HKDF(self.R_a + self.R_b, self.shared_secret).expand(b'1.0', length=16)
@@ -131,13 +131,13 @@ class SAProposalTest(BaseMessageTestCase):
         self.assert_correct_mac(response)
         self.assert_message_type(response, 0x81)
 
-        sa = msgpack.loads(response[1:-self.mac_len])
+        sa = cbor.loads(response[1:-self.mac_len])
 
         # Should have selected Keccak-256 as default
-        self.assertEqual(sa[b'mac'], b'sha3_256')
+        self.assertEqual(sa['mac'], 'sha3_256')
 
         # Should have defaulted to 8 byte MACs
-        self.assertEqual(sa[b'mac_len'], 8)
+        self.assertEqual(sa['mac_len'], 8)
 
 
     def test_sa_proposal_invalid_length(self):
@@ -157,16 +157,16 @@ class SAProposalTest(BaseMessageTestCase):
 
 
     def test_sa_proposal_macs(self):
-        msg = b'\x01' + msgpack.dumps({'macs': ['sha3_512']})
+        msg = b'\x01' + cbor.dumps({'macs': ['sha3_512']})
         mac = self.get_mac(msg, self.R_a)
         response = self.get_response(msg + mac).msg
-        sa = msgpack.loads(response[1:-8])
-        self.assertEqual(sa[b'mac'], b'sha3_512')
-        self.assertEqual(sa[b'mac_len'], 8)
+        sa = cbor.loads(response[1:-8])
+        self.assertEqual(sa['mac'], 'sha3_512')
+        self.assertEqual(sa['mac_len'], 8)
 
 
     def test_sa_proposal_invalid_macs(self):
-        msg = b'\x01' + msgpack.dumps({b'macs': b'\x00'*16})
+        msg = b'\x01' + cbor.dumps({'macs': b'\x00'*16})
         mac = self.get_mac(msg, self.R_a)
         response = self.get_response(msg + mac)
         self.assertIsNone(response)
@@ -178,34 +178,34 @@ class SAProposalTest(BaseMessageTestCase):
             # Reset channel between each test
             self.setUp()
 
-            msg = b'\x01' + msgpack.dumps({'mac_len': length})
+            msg = b'\x01' + cbor.dumps({'mac_len': length})
             mac = self.get_mac(msg, self.R_a)
             response = self.get_response(msg + mac).msg
             print(response)
-            sa = msgpack.loads(response[1:-self.mac_len])
-            self.assertEqual(sa[b'mac'], b'sha3_256')
-            self.assertEqual(sa[b'mac_len'], length)
+            sa = cbor.loads(response[1:-self.mac_len])
+            self.assertEqual(sa['mac'], 'sha3_256')
+            self.assertEqual(sa['mac_len'], length)
 
 
     def test_sa_proposal_unsupported_macs(self):
-        msg = b'\x01' + msgpack.dumps({'macs': ['hmac-md5']})
+        msg = b'\x01' + cbor.dumps({'macs': ['hmac-md5']})
         mac = self.get_mac(msg, self.R_a)
         response = self.get_response(msg + mac).msg
-        sa = msgpack.loads(response[1:-self.mac_len])
-        self.assertEqual(sa[b'mac'], b'sha3_256')
-        self.assertEqual(sa[b'mac_len'], 8)
+        sa = cbor.loads(response[1:-self.mac_len])
+        self.assertEqual(sa['mac'], 'sha3_256')
+        self.assertEqual(sa['mac_len'], 8)
 
 
     def test_sa_proposal_invalid_mac_len(self):
         for length in [-1, 0, 3, 33, 2**32, '\x00', b'\xff'*16]:
-            msg = b'\x01' + msgpack.dumps({b'mac_len': length})
+            msg = b'\x01' + cbor.dumps({'mac_len': length})
             mac = self.get_mac(msg, self.R_a)
             response = self.get_response(msg + mac)
             self.assertIsNone(response)
 
 
-    def test_sa_proposal_malformed_msgpack_data(self):
-        msg = b'\x01' + b'\x00\x00'
+    def test_sa_proposal_malformed_cbor_data(self):
+        msg = b'\x01' + b'\xff\x00'
         mac = self.get_mac(msg, self.R_a)
         response = self.get_response(msg + mac)
         self.assertIsNone(response)

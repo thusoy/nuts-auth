@@ -6,8 +6,8 @@ from os import path
 import sys
 
 install_requires = [
+    'cbor',
     'itsdangerous',
-    'msgpack-python',
     'pysha3',
     'six',
 ]
