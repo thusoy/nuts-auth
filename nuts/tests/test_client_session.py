@@ -113,8 +113,10 @@ class SATest(BaseTestCase):
             cbor.dumps({}),
             cbor.dumps([]),
             cbor.dumps({'mac': 'foobar'}),
+            cbor.dumps({'mac': -1}),
+            cbor.dumps({'mac_len': 'foobar'}),
             cbor.dumps({'mac_len': -1}),
-            cbor.dumps({'mac': 'invalid', 'mac_len': 8})
+            cbor.dumps({'mac': 'invalid', 'mac_len': 8}),
         ]
         for data in test_data:
             msg = b'\x81' + data
