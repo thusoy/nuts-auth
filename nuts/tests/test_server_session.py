@@ -15,6 +15,7 @@ class BaseMessageTestCase(unittest.TestCase):
     # These are overrideable to run tests and helpers with different parameters
     mac = 'sha3_256'
     mac_len = 8
+    shared_secret = b'secret'
 
     def assert_message_type(self, response, expected_type):
         self.assertEqual(six.byte2int(response), expected_type)
@@ -52,7 +53,6 @@ class EstablishedSessionTestCase(BaseMessageTestCase):
 
 
     def setUp(self):
-        self.shared_secret = b'secret'
         self.channel = DummyAuthChannel(self.shared_secret)
 
         # Put channel in established state
@@ -69,7 +69,6 @@ class EstablishedSessionTestCase(BaseMessageTestCase):
 class ClientHelloTest(BaseMessageTestCase):
 
     def setUp(self):
-        self.shared_secret = b'secret'
         self.channel = DummyAuthChannel(self.shared_secret)
 
 
@@ -114,7 +113,6 @@ class ClientHelloTest(BaseMessageTestCase):
 class SAProposalTest(BaseMessageTestCase):
 
     def setUp(self):
-        self.shared_secret = b'secret'
         self.channel = DummyAuthChannel(self.shared_secret)
 
         # Send valid client_hello to get channel into correct state

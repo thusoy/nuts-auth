@@ -27,7 +27,7 @@ class ClientHelloTest(BaseTestCase):
 
     def setUp(self):
         self.channel = DummyAuthChannel(self.shared_secret)
-        self.session = ClientSession('source', self.shared_secret, self.channel)
+        self.session = ClientSession('source', self.channel)
 
 
     def test_client_hello(self):
@@ -42,8 +42,8 @@ class ClientHelloTest(BaseTestCase):
 class ServerHelloTest(BaseTestCase):
 
     def setUp(self):
-        self.channel = DummyAuthChannel(self.shared_secret)
-        self.session = ClientSession('source', self.shared_secret, self.channel)
+        self.channel = DummyAuthChannel(self.shqared_secret)
+        self.session = ClientSession('source', self.channel)
         self.session.do_client_hello()
         self.R_b = self.channel.sent_messages.pop(0).msg[2:-8]
 

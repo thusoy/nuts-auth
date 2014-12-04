@@ -125,7 +125,7 @@ class AuthChannel(object):
 
     @contextmanager
     def connect(self, address):
-        session = ClientSession(address, self.shared_key, self)
+        session = ClientSession(address, self)
         session.connect()
 
         # Session setup complete, let client use the session
@@ -151,7 +151,7 @@ class AuthChannel(object):
         if message.sender in self.sessions:
             session = self.sessions.get(message.sender)
         else:
-            session = Session(message.sender, self.shared_key, self)
+            session = Session(message.sender, self)
             self.sessions[message.sender] = session
         session.handle(message.msg)
         if session.state == ServerState.inactive:
@@ -168,9 +168,9 @@ class ClientSession(object):
 
     version = b'1.0'
 
-    def __init__(self, id_a, shared_key, channel):
+    def __init__(self, id_a, channel):
         self.id_a = id_a
-        self.shared_key = shared_key
+        self.shared_key = channel.shared_key
         self.channel = channel
         self._messages = []
 
@@ -344,10 +344,10 @@ class Session(object):
     #: will be replied.
     version = b'1.0'
 
-    def __init__(self, id_b, shared_key, channel):
+    def __init__(self, id_b, channel):
         print('Creating new session with %s...' % (id_b,))
         self.id_b = id_b
-        self.shared_key = shared_key
+        self.shared_key = channel.shared_key
         self.state = ServerState.inactive
         self.channel = channel
 
