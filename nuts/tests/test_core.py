@@ -1,4 +1,5 @@
 import unittest
+import six
 
 from nuts import encode_version, decode_version
 from nuts.varint import encode_varint, decode_varint
@@ -53,7 +54,7 @@ class NutsCoreTest(unittest.TestCase):
             (b'\x81\x80\x00', 16384),
         ]
         for bytes, integer in tests:
-            self.assertEqual(decode_varint(bytes), integer)
+            self.assertEqual(decode_varint(list(six.iterbytes(bytes))), integer)
 
 
 if __name__ == '__main__':

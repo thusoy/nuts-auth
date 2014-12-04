@@ -23,7 +23,10 @@ def encode_varint(i):
 
 
 def decode_varint(s):
-    """ Decode a variable length byte string into a positive integer. """
+    """ Decode a variable length byte string into a positive integer.
+
+    Note that input must be an array of ints (the way python 3 iterates over a byte string).
+    """
     res = 0
     for exp, c in enumerate(reversed(s)):
         res += (c & 127)<<(exp*7)
