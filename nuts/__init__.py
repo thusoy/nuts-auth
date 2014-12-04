@@ -235,6 +235,7 @@ class ClientSession(object):
             return
         if not 4 <= sa['mac_len'] <= 32:
             print('mac_len outside range of 4-32 bytes')
+            return
         if not sa['mac'] in self.channel.supported_macs:
             print('mac %s not supported by this client' % sa['mac'])
             return

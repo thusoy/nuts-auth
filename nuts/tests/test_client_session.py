@@ -108,15 +108,21 @@ class SATest(BaseTestCase):
 
     def test_sa_invalid_cbor_data(self):
         test_data = [
+            # invalid data
             b'',
-            b'\x00',
-            cbor.dumps({}),
+            b'\xff',
+            # wrong type
             cbor.dumps([]),
-            cbor.dumps({'mac': 'foobar'}),
-            cbor.dumps({'mac': -1}),
-            cbor.dumps({'mac_len': 'foobar'}),
-            cbor.dumps({'mac_len': -1}),
-            cbor.dumps({'mac': 'invalid', 'mac_len': 8}),
+            # missing parameters
+            cbor.dumps({}),
+            cbor.dumps({'mac': 'sha3_256'})
+            cbor.dumps({'mac_len': 8})
+            # invalid mac
+            cbor.dumps({'mac': 'foobar', 'mac_len': 8}),
+            cbor.dumps({'mac': -1, 'mac_len': 8}),
+            # invalid mac_len
+            cbor.dumps({'mac_len': 'foobar', 'mac': 'sha3_256'}),
+            cbor.dumps({'mac_len': -1, 'mac': 'sha3_256'}),
         ]
         for data in test_data:
             msg = b'\x81' + data
