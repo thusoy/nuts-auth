@@ -94,7 +94,7 @@ class Session(object):
         """ Called from AuthChannel when it needs to send data through this session. This method adds type,
         sequence number and MAC.
         """
-        msg = six.int2byte(Message.reply) + encode_varint(self.my_seq) + data
+        msg = six.int2byte(self.outgoing_command) + encode_varint(self.my_seq) + data
         self._send(msg + self.get_mac(msg))
         self.my_seq += 1
 
@@ -104,6 +104,8 @@ class Session(object):
 
 
 class ClientSession(Session):
+
+    outgoing_command = Message.command
 
 
     def __init__(self, id_a, channel):
@@ -332,6 +334,8 @@ class ClientSession(Session):
 
 class ServerSession(Session):
     """ A connection between a given satellite and groundstation. """
+
+    outgoing_command = Message.reply
 
     def __init__(self, id_b, channel):
         print('Creating new session with %s...' % (id_b,))
