@@ -137,7 +137,11 @@ class SATest(BaseTestCase):
 
 class EstablishedSessionTestCase(BaseTestCase):
 
+    mac_len = 8
+    mac = 'sha3_256'
+
     def setUp(self):
+        print('Starting general setup')
         self.channel = DummyAuthChannel(self.shared_secret)
         self.session = ClientSession('source', self.channel)
         self.session.do_client_hello()
@@ -146,14 +150,16 @@ class EstablishedSessionTestCase(BaseTestCase):
         server_hello_mac = handshake_mac(self.shared_secret, server_hello, R_b)
         self.session.handle(server_hello + server_hello_mac)
         self.channel.sent_messages.pop(0)
-        sa = b'\x81' + cbor.dumps({'mac': 'sha3_256', 'mac_len': 8})
+        sa = b'\x81' + cbor.dumps({'mac': self.mac, 'mac_len': self.mac_len})
         self.session_key = HKDF(b'\x00'*8 + R_b, self.shared_secret).expand(info=b'1.0', length=16)
         sa_mac = handshake_mac(self.session_key, sa)
         self.session.handle(sa + sa_mac)
+        print('Inbox on start: %s' % self.channel.sent_messages)
 
 
     def get_mac(self, data):
-        return hashlib.sha3_256(self.session_key + data).digest()[:8]
+        mac_func = getattr(hashlib, self.mac)
+        return mac_func(self.session_key + data).digest()[:self.mac_len]
 
 
 class ReplyTest(EstablishedSessionTestCase):
@@ -216,9 +222,11 @@ class RekeyResponseTest(EstablishedSessionTestCase):
 
     def setUp(self):
         super(RekeyResponseTest, self).setUp()
+        print('Running rekey setup')
         self.session.send_rekey()
         rekey_msg = self.channel.sent_messages.pop(0).msg
-        self.client_pubkey = rekey_msg[2:-8]
+        self.client_pubkey = rekey_msg[2:-self.mac_len]
+        print('SetUp compelte')
 
 
     def test_responds_to_valid_rekey_response(self):
@@ -227,15 +235,16 @@ class RekeyResponseTest(EstablishedSessionTestCase):
         mac = self.get_mac(msg)
         response = self.get_response(msg + mac).msg
         self.assert_message_type(response, 0x04)
-        self.assertEqual(len(response), 9)
+        self.assertEqual(len(response), 1 + self.mac_len)
         shared_key = crypto_scalarmult(pkey._private_key, self.client_pubkey)
-        expected_mac = hashlib.sha3_256(shared_key + response[:-8]).digest()[:8]
-        self.assertEqual(response[-8:], expected_mac)
+        mac_func = getattr(hashlib, self.mac)
+        expected_mac = mac_func(shared_key + response[:-self.mac_len]).digest()[:self.mac_len]
+        self.assertEqual(response[-self.mac_len:], expected_mac)
         self.assertEqual(self.session.state, ClientState.wait_for_rekey_complete)
 
 
     def test_rekey_response_invalid_length(self):
-        msg = b'\x83\x00'
+        msg = b'\x83'
         mac = self.get_mac(msg)
         self.session.handle(msg + mac)
         self.assertEqual(self.session.other_seq, 0)
@@ -248,10 +257,21 @@ class RekeyResponseTest(EstablishedSessionTestCase):
 
 
     def test_rekey_response_bad_sequence_number(self):
-        msg = b'\x83\x01' + b'\x00'*32
+        msg = b'\x83\x02' + b'\x00'*32
         mac = self.get_mac(msg)
         self.session.handle(msg + mac)
         self.assertEqual(self.session.other_seq, 0)
+
+
+class TerminateTest(EstablishedSessionTestCase):
+
+    def test_client_terminate(self):
+        self.session.terminate()
+        msg = self.channel.sent_messages.pop(0).msg
+        self.assert_message_type(msg, 0x0f)
+        self.assertEqual(len(msg), 2 + self.mac_len)
+        expected_mac = self.get_mac(msg[:-self.mac_len])
+        self.assertEqual(expected_mac, msg[-self.mac_len:])
 
 
 class RekeyCompleteTest(EstablishedSessionTestCase):
@@ -260,7 +280,7 @@ class RekeyCompleteTest(EstablishedSessionTestCase):
         super(RekeyCompleteTest, self).setUp()
         self.session.send_rekey()
         rekey_msg = self.channel.sent_messages.pop(0).msg
-        self.client_pubkey = rekey_msg[2:-8]
+        self.client_pubkey = rekey_msg[2:-self.mac_len]
         pkey = PrivateKey.generate()
         msg = b'\x83\x00' + pkey.public_key._public_key
         mac = self.get_mac(msg)
@@ -270,7 +290,22 @@ class RekeyCompleteTest(EstablishedSessionTestCase):
 
     def test_response_to_rekey_complete(self):
         msg = b'\x84'
-        mac = hashlib.sha3_256(self.new_shared_key + msg).digest()[:8]
+        mac_func = getattr(hashlib, self.mac)
+        mac = mac_func(self.new_shared_key + msg).digest()[:self.mac_len]
         self.session.handle(msg + mac)
         self.assertEqual(self.channel.shared_key, self.new_shared_key)
         self.assertEqual(self.session.state, ClientState.terminated)
+
+
+class NonDefaultParameterTest(TerminateTest, ReplyTest):
+    mac_len = 16
+    mac = 'sha3_512'
+
+
+class NonDefaultRekeyCompleteTest(RekeyCompleteTest):
+    mac_len = 16
+    mac = 'sha3_512'
+
+class NonDefaultRekeyResponseTest(RekeyResponseTest):
+    mac_len = 16
+    mac = 'sha3_512'

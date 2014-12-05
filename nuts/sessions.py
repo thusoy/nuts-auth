@@ -19,7 +19,7 @@ import sys
 
 
 def handshake_mac(*args):
-    print('Client MACing %s (%d) with key %s (%d)' % (
+    print('Client handshake MACing %s (%d) with key %s (%d)' % (
         ascii_bin(b''.join(args[1:])),
         len(b''.join(args[1:])),
         ascii_bin(args[0]),
@@ -31,7 +31,7 @@ class Session(object):
 
     version = b'1.0'
 
-    def derive_session_key(self):
+    def generate_and_set_session_key(self):
         self.session_key = HKDF(self.R_a + self.R_b, self.shared_key).expand(self.version, length=16)
 
 
@@ -47,6 +47,7 @@ class Session(object):
             return
 
         handler = self.handlers.get(msg_type_byte)
+        print('Handling data %s' % ascii_bin(message))
         handler(message)
 
 
@@ -75,11 +76,12 @@ class Session(object):
         self._mac_key = key
         self._mac_func = func
         self._mac_length = length
+        print('Mac set to %s (%d)' % (func_name, length))
 
 
     def get_mac(self, *args, **kwargs):
         key = kwargs.get('key') or self._mac_key
-        print('MACing %s ' % ascii_bin(b''.join(args)))
+        print('Client MACing %s ' % ascii_bin(b''.join(args)))
         return self._mac_func(key + b''.join(args)).digest()[:self._mac_length]
 
 
@@ -185,6 +187,7 @@ class ClientSession(Session):
                 continue
             self.handle(data)
         # Initialize new session with the same session object
+        self.shared_key = self.channel.shared_key
         self.connect()
 
 
@@ -199,8 +202,8 @@ class ClientSession(Session):
 
     def respond_to_rekey_response(self, data):
         # Verify length
-        if len(data) != 41 + len(encode_varint(self.other_seq)):
-            print('Invalid length of rekey response')
+        if len(data) != 33 + len(encode_varint(self.other_seq)) + self._mac_length:
+            print('Invalid length of rekey response, was %d' % len(data))
             return
 
         # Verify MAC
@@ -220,6 +223,7 @@ class ClientSession(Session):
         mac = self.get_mac(msg, key=self.new_master_key)
         self._send(msg + mac)
         self.other_seq += 1
+        self.my_seq += 1
         self.state = ClientState.wait_for_rekey_complete
 
 
@@ -307,7 +311,7 @@ class ClientSession(Session):
 
         self.R_a = data[1:-8]
         sa_msg = six.int2byte(Message.sa_proposal)
-        self.derive_session_key()
+        self.generate_and_set_session_key()
         print('Session key: %s' % ascii_bin(self.session_key))
         sa_mac = handshake_mac(self.shared_key, sa_msg, self.R_a)
         self._send(sa_msg + sa_mac)
@@ -315,9 +319,10 @@ class ClientSession(Session):
 
 
     def terminate(self):
-        terminate_msg = six.int2byte(Message.client_terminate)
-        terminate_mac = self.get_mac(terminate_msg)
-        self.send(terminate_msg + terminate_mac)
+        msg = six.int2byte(Message.client_terminate) + encode_varint(self.my_seq)
+        mac = self.get_mac(msg)
+        self._send(msg + mac)
+        self.my_seq += 1
 
 
     def _send(self, data):
@@ -409,8 +414,25 @@ class ServerSession(Session):
 
 
     def respond_to_client_terminate(self, message):
+        # Verify length
+        if len(message) != 2 + self._mac_length:
+            print('Invalid length of client terminate')
+            return
+
+        # Verify MAC
+        if not self.verify_mac(message):
+            print('Invalid MAC on client termiante')
+            return
+
+        # Verify sequence number
+        if not self.sequence_number_matches(message):
+            print('Invalid sequence number on client terminate')
+            return
+
         self.state = ServerState.inactive
-        raise NotImplemented()
+        msg = six.int2byte(Message.server_terminate)
+        mac = self.get_mac(msg)
+        self._send(msg + mac)
 
 
     def respond_to_sa_proposal(self, message):
@@ -468,7 +490,7 @@ class ServerSession(Session):
         # All jolly good, notify client of chosen MAC and signature length
 
         # Expand session key
-        self.derive_session_key()
+        self.generate_and_set_session_key()
         print('Session key: %s' % ascii_bin(self.session_key))
 
         sa = {
@@ -511,6 +533,7 @@ class ServerSession(Session):
         full_msg = msg + self.get_mac(msg)
         self._send(full_msg)
         self.my_seq += 1
+        self.other_seq += 1
 
 
     def respond_to_rekey_confirm(self, message):

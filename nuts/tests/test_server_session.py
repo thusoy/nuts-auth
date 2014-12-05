@@ -295,6 +295,7 @@ class RekeyTest(EstablishedSessionTestCase):
         response = self.send_with_mac(msg).msg
         self.assertEqual(len(response), 34 + self.mac_len)
         self.assert_correct_mac(response)
+        self.assertEqual(six.byte2int(response[1:]), 0x00)
         self.assert_message_type(response, 0x83)
         server_pubkey = response[2:-self.mac_len]
         new_shared_secret = crypto_scalarmult(pkey._private_key, server_pubkey)
@@ -349,7 +350,34 @@ class RekeyTest(EstablishedSessionTestCase):
         self.assertIsNone(response)
 
 
-class NonDefaultParametersSessionTest(CommandTest, RekeyTest):
+class ClientTerminateTest(EstablishedSessionTestCase):
+
+    def test_client_terminate(self):
+        msg = b'\x0f\x00'
+        response = self.send_with_mac(msg).msg
+        self.assert_message_type(response, 0x8f)
+        self.assert_correct_mac(response)
+
+
+    def test_client_terminate_invalid_length(self):
+        msg = b'\x0f'
+        response = self.send_with_mac(msg)
+        self.assertIsNone(response)
+
+
+    def test_client_termiante_invalid_sequence_number(self):
+        msg = b'\x0f\x01'
+        response = self.send_with_mac(msg)
+        self.assertIsNone(response)
+
+
+    def test_client_terminate_invalid_mac(self):
+        msg = b'\x0f\x00' + b'\x00'*self.mac_len
+        response = self.get_response(msg)
+        self.assertIsNone(response)
+
+
+class NonDefaultParametersSessionTest(CommandTest, RekeyTest, ClientTerminateTest):
     """ Re-run all the tests from established state with non-default mac and mac_len. """
 
     mac = 'sha3_512'
