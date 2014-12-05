@@ -297,6 +297,20 @@ class RekeyCompleteTest(EstablishedSessionTestCase):
         self.assertEqual(self.session.state, ClientState.terminated)
 
 
+    def test_response_to_rekey_completed_invalid_length(self):
+        msg = b'\x84\x00'
+        mac_func = getattr(hashlib, self.mac)
+        mac = mac_func(self.new_shared_key + msg).digest()[:self.mac_len]
+        self.session.handle(msg + mac)
+        self.assertEqual(self.session.other_seq, 1)
+
+
+    def test_response_to_rekey_completed_invalid_mac(self):
+        msg = b'\x84' + b'\x00'*self.mac_len
+        self.session.handle(msg)
+        self.assertEqual(self.session.other_seq, 1)
+
+
 class NonDefaultParameterTest(TerminateTest, ReplyTest):
     mac_len = 16
     mac = 'sha3_512'

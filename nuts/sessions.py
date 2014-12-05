@@ -330,14 +330,6 @@ class ClientSession(Session):
         self.channel._send(data, self.id_a)
 
 
-    def send(self, data):
-        """ Exposed externally to consumers. """
-        msg = six.int2byte(Message.command) + encode_varint(self.my_seq) + data
-        self._send(msg + self.get_mac(msg))
-        self.my_seq += 1
-
-
-
 class ServerSession(Session):
     """ A connection between a given satellite and groundstation. """
 
