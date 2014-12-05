@@ -51,10 +51,12 @@ def do_timelapse(number_of_pictures, seconds_between_pictures):
 from nuts import UDPAuthChannel
 
 # Server
-channel = UDPAuthChannel('secret')
+channel = UDPAuthChannel('secret') # How do you handle re-keying?
 channel.listen( ('127.0.0.1', 8001) )
 while True:
     msg = channel.receive()
+    # How to terminate the session this message came over?
     print '**********************************', msg
     for i in range(4):
         channel.send('Pic %d' % i, msg.sender)
+    #msg.session.terminate()?
