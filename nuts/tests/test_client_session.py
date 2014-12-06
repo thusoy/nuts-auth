@@ -93,7 +93,15 @@ class SATest(BaseTestCase):
         server_hello_mac = handshake_mac(self.shared_secret, server_hello, self.R_b)
         self.session_key = HKDF(b'\x00'*8 + self.R_b, self.shared_secret).expand(info=b'1.0', length=16)
         self.session.handle(server_hello + server_hello_mac)
-        self.channel.sent_messages.pop(0)
+        self.sa_proposal = self.channel.sent_messages.pop(0).msg
+
+
+    def test_sent_valid_sa_proposal(self):
+        self.assert_message_type(self.sa_proposal, 0x01)
+        # Should have sent a default empty proposal
+        self.assertEqual(len(self.sa_proposal), 9)
+        expected_mac = handshake_mac(self.shared_secret, b'\x01', b'\x00'*8)
+        self.assertEqual(self.sa_proposal[-8:], expected_mac)
 
 
     def test_response_to_valid_sa(self):

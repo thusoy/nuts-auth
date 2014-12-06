@@ -132,6 +132,10 @@ class SAProposalTest(BaseMessageTestCase):
         self.assert_correct_mac(response)
         self.assert_message_type(response, 0x81)
 
+        # The CBOR encoded data should use the utf-8 types
+        # 0x63: Three-byte UTF-8 string ("mac"), 0x66: six-byte utf-8 string ("mac_len")
+        self.assertTrue(six.byte2int(response[2:]) in (0x63, 0x67))
+
         sa = cbor.loads(response[1:-8])
 
         # Should have selected Keccak-256 as default

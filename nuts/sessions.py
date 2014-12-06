@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from . import AuthenticatedMessage
 from .enums import ClientState, ServerState, Message
 from .hkdf import HKDF
