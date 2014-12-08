@@ -107,9 +107,9 @@ NtRp39
 g18
 I1
 sg19
-I102
+I104
 sg20
-I363
+I362
 sg21
 I0
 sg22
@@ -119,7 +119,7 @@ I27
 sg24
 I15
 sbssg25
-S'\xb5\x01s\x1b_\xa34]km\x83\xafd\xa9LS'
+S'\xcc\x816-\x9b\x89\x95\x8c\xcetB\x07\x9c\xd4\xcf\x14'
 p41
 ssS'nuts_enums'
 p42
