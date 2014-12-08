@@ -8,6 +8,7 @@ from .utils import ascii_bin, decode_version, encode_version, rng, encode_varint
 from enum import Enum, IntEnum
 from functools import partial
 from itsdangerous import constant_time_compare
+from logging import getLogger
 from nacl.c import crypto_scalarmult
 from nacl.public import PrivateKey
 import cbor
@@ -20,8 +21,11 @@ import string
 import sys
 
 
+_logger = getLogger('nuts.session')
+
+
 def handshake_mac(*args):
-    print('Client handshake MACing %s (%d) with key %s (%d)' % (
+    _logger.debug('Client handshake MACing %s (%d) with key %s (%d)' % (
         ascii_bin(b''.join(args[1:])),
         len(b''.join(args[1:])),
         ascii_bin(args[0]),
@@ -45,11 +49,11 @@ class Session(object):
         valid_transitions = self.transition_map.get(self.state, [])
         if not msg_type_byte in valid_transitions:
             # Ignore
-            print('Ignoring invalid transition')
+            _logger.info('Ignoring invalid transition')
             return
 
         handler = self.handlers.get(msg_type_byte)
-        print('Handling data %s' % ascii_bin(message))
+        _logger.debug('Handling data %s' % ascii_bin(message))
         handler(message)
 
 
@@ -81,12 +85,12 @@ class Session(object):
         self._mac_key = key
         self._mac_func = func
         self._mac_length = length
-        print('Mac set to %s (%d)' % (func_name, length))
+        _logger.info('Mac set to %s (%d)', func_name, length)
 
 
     def get_mac(self, *args, **kwargs):
         key = kwargs.get('key') or self._mac_key
-        print('Client MACing %s ' % ascii_bin(b''.join(args)))
+        _logger.debug('Client MACing %s ', ascii_bin(b''.join(args)))
         return self._mac_func(key + b''.join(args)).digest()[:self._mac_length]
 
 
@@ -143,47 +147,45 @@ class ClientSession(Session):
             if sender != self.id_a:
                 continue
             self.handle(data)
-            print('State is now %s' % self.state)
-        print('State is now %s' % self.state)
+            _logger.debug('State is now %s' % self.state)
 
 
     def respond_to_sa(self, data):
         # Verify MAC
         expected_mac = handshake_mac(self.session_key, data[:-8])
         if not data[-8:] == expected_mac:
-            print('Invalid MAC on SA')
+            _logger.info('Invalid MAC on SA')
             return
 
         # Verify that the cbored data has both 'mac' and 'mac_len' set to valid values
         try:
             sa = cbor.loads(data[1:-8])
             if not isinstance(sa, dict):
-                print('SA not a dict')
+                _logger.info('SA not a dict')
                 return
-            print('SA: %s' % sa)
         except:
-            print('Decoding cbored data from SA failed')
+            _logger.info('Decoding cbored data from SA failed')
             return
         if not ('mac' in sa and 'mac_len' in sa):
-            print('SA missing mac and/or mac_len')
+            _logger.info('SA missing mac and/or mac_len')
             return
         if not isinstance(sa['mac'], six.string_types):
-            print('SA mac not a string')
+            _logger.info('SA mac not a string')
             return
         if not isinstance(sa['mac_len'], six.integer_types):
-            print('mac_len not an int')
+            _logger.info('mac_len not an int')
             return
         if not 4 <= sa['mac_len'] <= 32:
-            print('mac_len outside range of 4-32 bytes')
+            _logger.info('mac_len outside range of 4-32 bytes')
             return
         if not sa['mac'] in self.channel.supported_macs:
-            print('mac %s not supported by this client' % sa['mac'])
+            _logger.info('mac %s not supported by this client', sa['mac'])
             return
 
         self.init_session_mac(key=self.session_key, func_name=sa['mac'], length=sa['mac_len'])
         self.other_seq = self.my_seq = 0
         self.state = ClientState.established
-        print('Session established')
+        _logger.info('Session established')
 
 
     def rekey(self):
@@ -210,17 +212,17 @@ class ClientSession(Session):
     def respond_to_rekey_response(self, data):
         # Verify length
         if len(data) != 33 + len(encode_varint(self.other_seq)) + self._mac_length:
-            print('Invalid length of rekey response, was %d' % len(data))
+            _logger.info('Invalid length of rekey response, was %d', len(data))
             return
 
         # Verify MAC
         if not self.verify_mac(data):
-            print('Invalid MAC on rekey response')
+            _logger.info('Invalid MAC on rekey response')
             return
 
         # Verify seqnum
         if not self.validate_and_update_others_seqnum(data):
-            print('Invalid sequence number on rekey response')
+            _logger.info('Invalid sequence number on rekey response')
             return
 
         # Compute new shared key
@@ -236,13 +238,13 @@ class ClientSession(Session):
     def respond_to_rekey_completed(self, data):
         # Verify length
         if len(data) != 1 + self._mac_length:
-            print('Invalid length of rekey completed, was %d' % len(data))
+            _logger.info('Invalid length of rekey completed, was %d', len(data))
             return
 
         # Verify MAC
         expected_mac = self.get_mac(data[:-self._mac_length], key=self.new_master_key)
         if not constant_time_compare(data[-self._mac_length:], expected_mac):
-            print('Invalid MAC on rekey completed')
+            _logger.info('Invalid MAC on rekey completed')
             return
 
         self.channel.shared_key = self.new_master_key
@@ -254,24 +256,24 @@ class ClientSession(Session):
     def respond_to_server_message(self, message):
         # Verify length (type + minimum 1 byte of seqnum + mac)
         if not self._mac_length + 2 <= len(message) <= 2**16:
-            print('Invalid length of reply (was %d)' % len(message))
+            _logger.info('Invalid length of reply (was %d)', len(message))
             return
 
         # Verify MAC
         if not self.verify_mac(message):
-            print('Invalid MAC on reply')
+            _logger.info('Invalid MAC on reply')
             return
 
         # Verify sequence number
         if not self.validate_and_update_others_seqnum(message):
-            print('Not expected sequence number, expected %d' % self.other_seq)
+            _logger.info('Not expected sequence number, expected %d', self.other_seq)
             # TODO: If future sequence number, either store it or deliver it to app immediately,
             # depending on config
             return
 
         data = self.extract_message_data(message)
         self.deliver(data)
-        print('Message added to _messages: %s' % self._messages)
+        _logger.debug('Message added to _messages: %s' % self._messages)
 
 
     def deliver(self, data):
@@ -304,19 +306,18 @@ class ClientSession(Session):
     def respond_to_server_hello(self, data):
         # Verify length
         if not len(data) == 17:
-            print('Invalid length of SERVER_HELLO')
+            _logger.info('Invalid length of SERVER_HELLO')
             return
 
         # Verify MAC
         expected_mac = handshake_mac(self.shared_key, data[:-8], self.R_b)
         if not constant_time_compare(data[-8:], expected_mac):
-            print('Invalid mac on SERVER_HELLO')
+            _logger.info('Invalid mac on SERVER_HELLO')
             return
 
         self.R_a = data[1:-8]
         sa_msg = six.int2byte(Message.sa_proposal)
         self.generate_and_set_session_key()
-        print('Session key: %s' % ascii_bin(self.session_key))
         sa_mac = handshake_mac(self.shared_key, sa_msg, self.R_a)
         self._send(sa_msg + sa_mac)
         self.state = ClientState.wait_for_sa
@@ -340,7 +341,7 @@ class ServerSession(Session):
     outgoing_command = Message.reply
 
     def __init__(self, id_b, channel):
-        print('Creating new session with %s...' % (id_b,))
+        _logger.info('Creating new session with %s...', id_b)
         self.id_b = id_b
         self.shared_key = channel.shared_key
         self.state = ServerState.inactive
@@ -381,20 +382,20 @@ class ServerSession(Session):
         """
         # Verify that incoming packet has correct length
         if not len(message) == 18:
-            print('Wrong length of client hello')
+            _logger.info('Wrong length of client hello')
             return
 
         # Verify incoming MAC
         expected_mac = handshake_mac(self.shared_key, message[:-8])
         if not constant_time_compare(message[-8:], expected_mac):
-            print('Incorrect mac for client hello')
+            _logger.info('Incorrect mac for client hello')
             return
 
         # Check that version is supported
         client_version = decode_version(message[1:2])
         if not client_version == self.version:
             # reply with supported version, and copy of client's message
-            print('Unsupported version of client hello')
+            _logger.info('Unsupported version of client hello')
             msg = (six.int2byte(Message.version_not_supported) +
                 encode_version(self.version) +
                 message[2:10])
@@ -414,17 +415,17 @@ class ServerSession(Session):
     def respond_to_client_terminate(self, message):
         # Verify length
         if len(message) != 2 + self._mac_length:
-            print('Invalid length of client terminate')
+            _logger.info('Invalid length of client terminate')
             return
 
         # Verify MAC
         if not self.verify_mac(message):
-            print('Invalid MAC on client termiante')
+            _logger.info('Invalid MAC on client termiante')
             return
 
         # Verify sequence number
         if not self.validate_and_update_others_seqnum(message):
-            print('Invalid sequence number on client terminate')
+            _logger.info('Invalid sequence number on client terminate')
             return
 
         self.state = ServerState.inactive
@@ -436,14 +437,14 @@ class ServerSession(Session):
     def respond_to_sa_proposal(self, message):
         # Verify length
         if not 9 <= len(message) <= 255:
-            print('Invalid length', len(message))
+            _logger.info('Invalid length %d', len(message))
             return
 
         # Verify MAC
         msg, sig = message[:-8], message[-8:]
         expected_mac = handshake_mac(self.shared_key, msg, self.R_a)
         if not constant_time_compare(sig, expected_mac):
-            print('Invalid mac on sa proposal')
+            _logger.info('Invalid mac on sa proposal')
             return
 
         msg_data = {}
@@ -453,17 +454,17 @@ class ServerSession(Session):
             try:
                 msg_data = cbor.loads(msg[1:])
             except:
-                print('Invalid cbor data given in sa proposal')
+                _logger.info('Invalid cbor data given in sa proposal')
                 return
 
         # Verify that the data loaded is a dict
         if not isinstance(msg_data, dict):
-            print('SA proposal not a dict')
+            _logger.info('SA proposal not a dict')
             return
 
         # Verify that key 'macs' is a list
         if not isinstance(msg_data.get('macs', []), list):
-            print('Not list')
+            _logger.info('macs given was not a list')
             return
 
         # Merge client parameters with defaults
@@ -479,17 +480,16 @@ class ServerSession(Session):
         # Verify that suggested MAC length is valid int
         suggested_mac_len = msg_data.get('mac_len', 8)
         if not isinstance(suggested_mac_len, six.integer_types):
-            print('mac_len not int: %s' % type(suggested_mac_len))
+            _logger.info('mac_len not int: %s', type(suggested_mac_len))
             return
         if not 4 <= suggested_mac_len <= 32:
-            print("suggested mac_len outside permitted range of 4-32 bytes")
+            _logger.info("suggested mac_len outside permitted range of 4-32 bytes")
             return
 
         # All jolly good, notify client of chosen MAC and signature length
 
         # Expand session key
         self.generate_and_set_session_key()
-        print('Session key: %s' % ascii_bin(self.session_key))
 
         sa = {
             'mac': selected_mac,
@@ -509,18 +509,18 @@ class ServerSession(Session):
     def respond_to_rekey(self, message):
         # Verify length
         if not len(message) == 34 + self._mac_length:
-            print('Invalid length of rekey')
+            _logger.info('Invalid length of rekey')
             return
 
         # Verify MAC
         msg, sig = message[:-self._mac_length], message[-self._mac_length:]
         if not self.verify_mac(message):
-            print('Invalid MAC on rekey')
+            _logger.info('Invalid MAC on rekey')
             return
 
         # Verify sequence number
         if not self.validate_and_update_others_seqnum(msg):
-            print('Invalid sequence number on rekey')
+            _logger.info('Invalid sequence number on rekey')
             return
 
         client_pubkey = msg[2:]
@@ -536,14 +536,14 @@ class ServerSession(Session):
     def respond_to_rekey_confirm(self, message):
         # Verify length
         if not len(message) == self._mac_length + 1:
-            print('Invalid length of rekey confirm')
+            _logger.info('Invalid length of rekey confirm')
             return
 
         # Verify MAC
         msg, sent_mac = message[:-self._mac_length], message[-self._mac_length:]
         expected_mac = self.get_mac(msg, key=self.new_master_key)
         if not constant_time_compare(sent_mac, expected_mac):
-            print('Invalid MAC of rekey confirm')
+            _logger.info('Invalid MAC of rekey confirm')
             return
 
         # Update shared_key
@@ -564,18 +564,18 @@ class ServerSession(Session):
         """Signed, operational command received. Verify signature and return message."""
         # Verify length
         if not self._mac_length + 1 <= len(message) <= 2**16:
-            print('Invalid length of message, was %s' % len(message))
+            _logger.info('Invalid length of message, was %d', len(message))
             return
 
         # Verify MAC
         msg, sig = message[:-self._mac_length], message[-self._mac_length:]
         if not self.verify_mac(message):
-            print('Invalid mac on command')
+            _logger.info('Invalid mac on command')
             return
 
         # Verify sequence number
         if not self.validate_and_update_others_seqnum(message):
-            print('Not expected sequence number, expected %d' % self.other_seq)
+            _logger.info('Not expected sequence number, expected %d', self.other_seq)
             # TODO: If future sequence number, either store it or deliver it to app immediately,
             # depending on config
             return

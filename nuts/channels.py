@@ -4,7 +4,12 @@ from .utils import ascii_bin
 from .sessions import ClientSession, ServerSession
 
 from contextlib import contextmanager
+from logging import getLogger
 import socket
+
+
+_logger = getLogger('nuts.channel')
+
 
 class AuthChannel(object):
     """ Generic, transport-agnostic authenticated channel. Needs to be overridden by class
@@ -31,7 +36,7 @@ class AuthChannel(object):
 
     def receive(self):
         while not self._messages:
-            print('Listening...')
+            _logger.info('Listening...')
             data, sender = self.read_data()
             message = AuthenticatedMessage(sender, data)
             self.handle_message(message)
@@ -47,7 +52,7 @@ class AuthChannel(object):
         yield session
 
         # Send terminate
-        print('Terminating session...')
+        _logger.info('Terminating session with %s...', session.id_a)
         session.terminate()
 
 
@@ -70,12 +75,12 @@ class AuthChannel(object):
             self.sessions[message.sender] = session
         session.handle(message.msg)
         if session.state == ServerState.inactive:
-            print('Terminating session with %s' % str(message.sender))
+            _logger.info('Terminating session with %s' % str(message.sender))
             del self.sessions[message.sender]
         elif session.state == ServerState.rekey_confirmed:
-            print('Rekey confirmed, new master key in place, invalidating all existing sessions..')
+            _logger.info('Rekey confirmed, new master key in place, invalidating all existing sessions..')
             self.sessions = {}
-            print('Session invalidated, shared key updated')
+            _logger.info('Session invalidated, shared key updated')
             self.shared_key = session.shared_key
 
 
@@ -91,21 +96,20 @@ class UDPAuthChannel(AuthChannel):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             self.sock.bind(address)
-            print('Bound to %s:%s' % address)
+            _logger.info('Bound to %s:%s' % address)
         except Exception as e:
-            print(e)
+            _logger.exception('Exception occured while binding to socket, address %s.', address)
             raise
 
 
     def send_data(self, data, address):
-        print('Sending %s to %s' % (ascii_bin(data), address))
+        _logger.debug('Sending %s to %s' % (ascii_bin(data), address))
         self.sock.sendto(data, address)
-        print("I'm now %s" % (self.sock.getsockname(),))
 
 
     def read_data(self):
         data, sender = self.sock.recvfrom(1024)
-        print('Received data: %s from %s' % (ascii_bin(data), sender))
+        _logger.debug('Received data: %s from %s' % (ascii_bin(data), sender))
         return data, sender
 
 
@@ -119,7 +123,7 @@ class DummyAuthChannel(AuthChannel):
 
 
     def send_data(self, data, address):
-        print('Sending data %s to %s' % (ascii_bin(data), address))
+        _logger.debug('Sending data %s to %s' % (ascii_bin(data), address))
         self.sent_messages.append(AuthenticatedMessage(address, data))
 
 
