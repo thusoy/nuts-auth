@@ -63,14 +63,17 @@ class Session(object):
         return data[1+seqnum_bytes:-self._mac_length]
 
 
-    def sequence_number_matches(self, data):
+    def validate_and_update_others_seqnum(self, data):
         seqnum_bytes = []
         for byte in six.iterbytes(data[1:]):
             seqnum_bytes.append(byte)
             if byte >> 7 == 0:
                 break
         seqnum = decode_varint(seqnum_bytes)
-        return seqnum == self.other_seq
+        valid = seqnum >= self.other_seq
+        if valid:
+            self.other_seq = seqnum + 1
+        return valid
 
 
     def init_session_mac(self, key, func_name, length):
@@ -216,7 +219,7 @@ class ClientSession(Session):
             return
 
         # Verify seqnum
-        if not self.sequence_number_matches(data):
+        if not self.validate_and_update_others_seqnum(data):
             print('Invalid sequence number on rekey response')
             return
 
@@ -226,7 +229,6 @@ class ClientSession(Session):
         msg = six.int2byte(Message.rekey_confirm)
         mac = self.get_mac(msg, key=self.new_master_key)
         self._send(msg + mac)
-        self.other_seq += 1
         self.my_seq += 1
         self.state = ClientState.wait_for_rekey_complete
 
@@ -261,13 +263,11 @@ class ClientSession(Session):
             return
 
         # Verify sequence number
-        if not self.sequence_number_matches(message):
+        if not self.validate_and_update_others_seqnum(message):
             print('Not expected sequence number, expected %d' % self.other_seq)
             # TODO: If future sequence number, either store it or deliver it to app immediately,
             # depending on config
             return
-
-        self.other_seq += 1
 
         data = self.extract_message_data(message)
         self.deliver(data)
@@ -423,7 +423,7 @@ class ServerSession(Session):
             return
 
         # Verify sequence number
-        if not self.sequence_number_matches(message):
+        if not self.validate_and_update_others_seqnum(message):
             print('Invalid sequence number on client terminate')
             return
 
@@ -519,7 +519,7 @@ class ServerSession(Session):
             return
 
         # Verify sequence number
-        if not self.sequence_number_matches(msg):
+        if not self.validate_and_update_others_seqnum(msg):
             print('Invalid sequence number on rekey')
             return
 
@@ -531,7 +531,6 @@ class ServerSession(Session):
         full_msg = msg + self.get_mac(msg)
         self._send(full_msg)
         self.my_seq += 1
-        self.other_seq += 1
 
 
     def respond_to_rekey_confirm(self, message):
@@ -575,14 +574,11 @@ class ServerSession(Session):
             return
 
         # Verify sequence number
-        if not self.sequence_number_matches(message):
+        if not self.validate_and_update_others_seqnum(message):
             print('Not expected sequence number, expected %d' % self.other_seq)
             # TODO: If future sequence number, either store it or deliver it to app immediately,
             # depending on config
             return
-
-        # Increase expected sequence number
-        self.other_seq += 1
 
         # Strip seqnum
         msg = self.extract_message_data(message)

@@ -230,16 +230,20 @@ class RekeyResponseTest(EstablishedSessionTestCase):
 
     def setUp(self):
         super(RekeyResponseTest, self).setUp()
-        print('Running rekey setup')
+
+        # Send one intial message from the server to be able to test old seqnums later
+        msg = b'\x82\x01Hello, world'
+        mac = self.get_mac(msg)
+        self.session.handle(msg + mac)
+
         self.session.send_rekey()
         rekey_msg = self.channel.sent_messages.pop(0).msg
         self.client_pubkey = rekey_msg[2:-self.mac_len]
-        print('SetUp compelte')
 
 
     def test_responds_to_valid_rekey_response(self):
         pkey = PrivateKey.generate()
-        msg = b'\x83\x00' + pkey.public_key._public_key
+        msg = b'\x83\x02' + pkey.public_key._public_key
         mac = self.get_mac(msg)
         response = self.get_response(msg + mac).msg
         self.assert_message_type(response, 0x04)
@@ -255,20 +259,20 @@ class RekeyResponseTest(EstablishedSessionTestCase):
         msg = b'\x83'
         mac = self.get_mac(msg)
         self.session.handle(msg + mac)
-        self.assertEqual(self.session.other_seq, 0)
+        self.assertEqual(self.session.other_seq, 2)
 
 
     def test_rekey_response_invalid_mac(self):
-        msg = b'\x83\x00' + b'\x00'*40
+        msg = b'\x83\x02' + b'\x00'*40
         self.session.handle(msg)
-        self.assertEqual(self.session.other_seq, 0)
+        self.assertEqual(self.session.other_seq, 2)
 
 
     def test_rekey_response_bad_sequence_number(self):
-        msg = b'\x83\x02' + b'\x00'*32
+        msg = b'\x83\x01' + b'\x00'*32
         mac = self.get_mac(msg)
         self.session.handle(msg + mac)
-        self.assertEqual(self.session.other_seq, 0)
+        self.assertEqual(self.session.other_seq, 2)
 
 
 class TerminateTest(EstablishedSessionTestCase):

@@ -245,6 +245,16 @@ class CommandTest(EstablishedSessionTestCase):
         self.assert_expecting_seqnum(2)
 
 
+    def test_lost_message(self):
+        msg = b'\x02\x02' + b'Hello, this is msg number 2'
+        self.send_with_mac(msg)
+        self.assert_expecting_seqnum(3)
+
+        msg = b'\x02\x04' + b'Hello, this is msg number 4'
+        self.send_with_mac(msg)
+        self.assert_expecting_seqnum(5)
+
+
     def test_command_multibyte_sequence_number(self):
         msg = b'\x02\x80\x80\x00' + b'Hello, space'
         self.send_with_mac(msg)
@@ -338,6 +348,9 @@ class RekeyTest(EstablishedSessionTestCase):
 
 
     def test_rekey_invalid_sequence_number(self):
+        first_msg = b'\x02\x01' + b'Hello, space'
+        self.send_with_mac(first_msg)
+
         msg = b'\x03\x01' + b'\x00'*32
         response = self.send_with_mac(msg)
         self.assertIsNone(response)
@@ -370,7 +383,10 @@ class ClientTerminateTest(EstablishedSessionTestCase):
 
 
     def test_client_termiante_invalid_sequence_number(self):
-        msg = b'\x0f\x01'
+        first_msg = b'\x02\x03' + b'Hello, world'
+        self.send_with_mac(first_msg)
+
+        msg = b'\x0f\x02'
         response = self.send_with_mac(msg)
         self.assertIsNone(response)
 
