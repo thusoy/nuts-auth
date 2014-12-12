@@ -1,4 +1,4 @@
-from nuts import ClientState
+from nuts import ClientState, NutsMessageTooLarge, NutsInvalidState
 from nuts.channels import DummyAuthChannel
 from nuts.hkdf import HKDF
 from nuts.sessions import ClientSession
@@ -45,6 +45,10 @@ class InvalidMessagesTest(BaseTestCase):
     def test_receive_empty_message(self):
         # Should not fail
         self.session.handle('')
+
+
+    def test_send_before_connect(self):
+        self.assertRaises(NutsInvalidState, self.session.send, 'Hello, world')
 
 
 class ClientHelloTest(BaseTestCase):
@@ -196,6 +200,14 @@ class ReplyTest(EstablishedSessionTestCase):
         self.assertEqual(self.session.other_seq, 2)
 
 
+    def test_server_message_seqnum_too_large(self):
+        # Five bytes of seqnum
+        msg = b'\x82\x80\x80\x80\x80\x01Hello, earthling'
+        mac = self.get_mac(msg)
+        self.session.handle(msg + mac)
+        self.assertEqual(self.session.other_seq, 0)
+
+
     def test_server_message_invalid_mac(self):
         msg = b'\x82\x00' + b'\x00'*8
         self.session.handle(msg)
@@ -216,6 +228,14 @@ class ReplyTest(EstablishedSessionTestCase):
         mac = self.get_mac(msg)
         self.session.handle(msg + mac)
         self.assertEqual(self.session.other_seq, 0)
+
+
+class TooLargeMessageTest(EstablishedSessionTestCase):
+
+    def test_send_too_large_message(self):
+        self.channel.mtu = 1024
+        # Max supported session is slightly smaller than the channel
+        self.assertRaises(NutsMessageTooLarge, self.session.send, b'\x00'*1024)
 
 
 class RekeyTest(EstablishedSessionTestCase):

@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from . import AuthenticatedMessage
+from . import AuthenticatedMessage, NutsMessageTooLarge, NutsInvalidState
 from .enums import ClientState, ServerState, Message
 from .hkdf import HKDF
 from .utils import ascii_bin, decode_version, encode_version, rng, encode_varint, decode_varint
@@ -36,6 +36,9 @@ def handshake_mac(*args):
 class Session(object):
 
     version = b'1.0'
+    #: Maxiumum length of the sequence numbers. Used both for sanity checks of
+    #: incoming data and calculatino of max MTU
+    max_seqnum_length = 4
 
     def generate_and_set_session_key(self):
         self.session_key = HKDF(self.R_a + self.R_b, self.shared_key).expand(self.version, length=16)
@@ -73,6 +76,8 @@ class Session(object):
         seqnum_bytes = []
         for byte in six.iterbytes(data[1:]):
             seqnum_bytes.append(byte)
+            if len(seqnum_bytes) > self.max_seqnum_length:
+                return False
             if byte >> 7 == 0:
                 break
         seqnum = decode_varint(seqnum_bytes)
@@ -102,12 +107,36 @@ class Session(object):
 
 
     def send(self, data):
-        """ Called from AuthChannel when it needs to send data through this session. This method adds type,
+        """ Called from AuthChannel when it needs to send data through this
+        session, or from the client-side application. This method adds type,
         sequence number and MAC.
+
+        Throws a NutsInvalidState if the session is not established.
         """
+        if not self.state == ClientState.established:
+            raise NutsInvalidState("Session needs to be established to be able"
+                " to send data, call .connect(address) first")
+        if self.mtu and len(data) > self.mtu:
+            raise NutsMessageTooLarge('Message of %d bytes is too long to be '
+                'sent through this session, maximum size supported is %d '
+                'bytes.' % (len(data), self.mtu))
         msg = six.int2byte(self.outgoing_command) + encode_varint(self.my_seq) + data
         self._send(msg + self.get_mac(msg))
         self.my_seq += 1
+
+
+    @property
+    def mtu(self):
+        """ Get the maximum transmission unit (MTU) for this session. Returns
+        None if there's no upper limit, or the maximum size in bytes.
+
+        The MTU is calculated as the MTU of the channel minus the overhead of
+        the session.
+        """
+        if self.channel.mtu:
+            session_overhead = 1 + self._mac_length + self.max_seqnum_length
+            session_mtu = self.channel.mtu - session_overhead
+            return session_mtu
 
 
     def derive_shared_key(self, other_party_pubkey):
@@ -124,6 +153,7 @@ class ClientSession(Session):
         self.shared_key = channel.shared_key
         self.channel = channel
         self._messages = []
+        self.state = ClientState.inactive
 
         self.handlers = {
             Message.server_hello: self.respond_to_server_hello,

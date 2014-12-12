@@ -9,12 +9,13 @@ class ServerState(Enum):
 
 
 class ClientState(Enum):
-    wait_for_server_hello = 1
-    wait_for_sa = 2
-    established = 3
-    rekey = 4
-    wait_for_rekey_complete = 5
-    terminated = 6
+    inactive = 1
+    wait_for_server_hello = 2
+    wait_for_sa = 3
+    established = 4
+    rekey = 5
+    wait_for_rekey_complete = 6
+    terminated = 7
 
 
 class Message(IntEnum):

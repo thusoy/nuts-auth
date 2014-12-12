@@ -15,9 +15,12 @@ class AuthChannel(object):
     """ Generic, transport-agnostic authenticated channel. Needs to be overridden by class
     implementing `receive` and `listen`.
     """
+    #: If the underlying transport layer has a MTU, child classes should set
+    #: this to the same MTU
+    mtu = None
 
-    #: MACs supported by this satellite/server. Used in the SA negotiation, should be ordered
-    #: by preference (strength).
+    #: MACs supported by this satellite/server. Used in the SA negotiation,
+    #: should be ordered by preference (strength).
     supported_macs = [
         'sha3_512',
         'sha3_384',
@@ -86,6 +89,9 @@ class AuthChannel(object):
 
 class UDPAuthChannel(AuthChannel):
 
+    #: The maximum size of packets sent and received on this channel
+    mtu = 4096
+
     def __init__(self, *args, **kwargs):
         super(UDPAuthChannel, self).__init__(*args, **kwargs)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -108,7 +114,7 @@ class UDPAuthChannel(AuthChannel):
 
 
     def read_data(self):
-        data, sender = self.sock.recvfrom(1024)
+        data, sender = self.sock.recvfrom(self.mtu)
         _logger.debug('Received data: %s from %s' % (ascii_bin(data), sender))
         return data, sender
 
