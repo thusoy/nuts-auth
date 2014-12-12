@@ -5,7 +5,7 @@
     
     
     <meta http-equiv='X-UA-Compatible' content='IE=emulateIE7' />
-    <title>Coverage for nuts.sessions: 91%</title>
+    <title>Coverage for nuts.sessions: 87%</title>
     <link rel='stylesheet' href='style.css' type='text/css'>
     
     <script type='text/javascript' src='jquery.min.js'></script>
@@ -21,13 +21,13 @@
 <div id='header'>
     <div class='content'>
         <h1>Coverage for <b>nuts.sessions</b> :
-            <span class='pc_cov'>91%</span>
+            <span class='pc_cov'>87%</span>
         </h1>
         <img id='keyboard_icon' src='keybd_closed.png'>
         <h2 class='stats'>
             360 statements &nbsp;
-            <span class='run hide_run shortkey_r button_toggle_run'>334 run</span>
-            <span class='mis shortkey_m button_toggle_mis'>26 missing</span>
+            <span class='run hide_run shortkey_r button_toggle_run'>321 run</span>
+            <span class='mis shortkey_m button_toggle_mis'>39 missing</span>
             <span class='exc shortkey_x button_toggle_exc'>0 excluded</span>
             
                 <span class='par run hide_run shortkey_p button_toggle_par'>3 partial</span>
@@ -479,24 +479,24 @@
 <p id='n414' class='pln'><a href='#n414'>414</a></p>
 <p id='n415' class='stm run hide_run'><a href='#n415'>415</a></p>
 <p id='n416' class='pln'><a href='#n416'>416</a></p>
-<p id='n417' class='stm run hide_run'><a href='#n417'>417</a></p>
-<p id='n418' class='stm run hide_run'><a href='#n418'>418</a></p>
-<p id='n419' class='stm run hide_run'><a href='#n419'>419</a></p>
+<p id='n417' class='stm mis'><a href='#n417'>417</a></p>
+<p id='n418' class='stm mis'><a href='#n418'>418</a></p>
+<p id='n419' class='stm mis'><a href='#n419'>419</a></p>
 <p id='n420' class='pln'><a href='#n420'>420</a></p>
 <p id='n421' class='pln'><a href='#n421'>421</a></p>
-<p id='n422' class='stm run hide_run'><a href='#n422'>422</a></p>
-<p id='n423' class='stm run hide_run'><a href='#n423'>423</a></p>
-<p id='n424' class='stm run hide_run'><a href='#n424'>424</a></p>
+<p id='n422' class='stm mis'><a href='#n422'>422</a></p>
+<p id='n423' class='stm mis'><a href='#n423'>423</a></p>
+<p id='n424' class='stm mis'><a href='#n424'>424</a></p>
 <p id='n425' class='pln'><a href='#n425'>425</a></p>
 <p id='n426' class='pln'><a href='#n426'>426</a></p>
-<p id='n427' class='stm run hide_run'><a href='#n427'>427</a></p>
-<p id='n428' class='stm run hide_run'><a href='#n428'>428</a></p>
-<p id='n429' class='stm run hide_run'><a href='#n429'>429</a></p>
+<p id='n427' class='stm mis'><a href='#n427'>427</a></p>
+<p id='n428' class='stm mis'><a href='#n428'>428</a></p>
+<p id='n429' class='stm mis'><a href='#n429'>429</a></p>
 <p id='n430' class='pln'><a href='#n430'>430</a></p>
-<p id='n431' class='stm run hide_run'><a href='#n431'>431</a></p>
-<p id='n432' class='stm run hide_run'><a href='#n432'>432</a></p>
-<p id='n433' class='stm run hide_run'><a href='#n433'>433</a></p>
-<p id='n434' class='stm run hide_run'><a href='#n434'>434</a></p>
+<p id='n431' class='stm mis'><a href='#n431'>431</a></p>
+<p id='n432' class='stm mis'><a href='#n432'>432</a></p>
+<p id='n433' class='stm mis'><a href='#n433'>433</a></p>
+<p id='n434' class='stm mis'><a href='#n434'>434</a></p>
 <p id='n435' class='pln'><a href='#n435'>435</a></p>
 <p id='n436' class='pln'><a href='#n436'>436</a></p>
 <p id='n437' class='stm run hide_run'><a href='#n437'>437</a></p>
@@ -1067,24 +1067,24 @@
 <p id='t414' class='pln'><span class='strut'>&nbsp;</span></p>
 <p id='t415' class='stm run hide_run'>&nbsp; &nbsp; <span class='key'>def</span> <span class='nam'>respond_to_client_terminate</span><span class='op'>(</span><span class='nam'>self</span><span class='op'>,</span> <span class='nam'>message</span><span class='op'>)</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
 <p id='t416' class='pln'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='com'># Verify length</span><span class='strut'>&nbsp;</span></p>
-<p id='t417' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>if</span> <span class='nam'>len</span><span class='op'>(</span><span class='nam'>message</span><span class='op'>)</span> <span class='op'>!=</span> <span class='num'>2</span> <span class='op'>+</span> <span class='nam'>self</span><span class='op'>.</span><span class='nam'>_mac_length</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
-<p id='t418' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>_logger</span><span class='op'>.</span><span class='nam'>info</span><span class='op'>(</span><span class='str'>&#39;Invalid length of client terminate&#39;</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t419' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>return</span><span class='strut'>&nbsp;</span></p>
+<p id='t417' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>if</span> <span class='nam'>len</span><span class='op'>(</span><span class='nam'>message</span><span class='op'>)</span> <span class='op'>!=</span> <span class='num'>2</span> <span class='op'>+</span> <span class='nam'>self</span><span class='op'>.</span><span class='nam'>_mac_length</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
+<p id='t418' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>_logger</span><span class='op'>.</span><span class='nam'>info</span><span class='op'>(</span><span class='str'>&#39;Invalid length of client terminate&#39;</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t419' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>return</span><span class='strut'>&nbsp;</span></p>
 <p id='t420' class='pln'><span class='strut'>&nbsp;</span></p>
 <p id='t421' class='pln'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='com'># Verify MAC</span><span class='strut'>&nbsp;</span></p>
-<p id='t422' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>if</span> <span class='key'>not</span> <span class='nam'>self</span><span class='op'>.</span><span class='nam'>verify_mac</span><span class='op'>(</span><span class='nam'>message</span><span class='op'>)</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
-<p id='t423' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>_logger</span><span class='op'>.</span><span class='nam'>info</span><span class='op'>(</span><span class='str'>&#39;Invalid MAC on client termiante&#39;</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t424' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>return</span><span class='strut'>&nbsp;</span></p>
+<p id='t422' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>if</span> <span class='key'>not</span> <span class='nam'>self</span><span class='op'>.</span><span class='nam'>verify_mac</span><span class='op'>(</span><span class='nam'>message</span><span class='op'>)</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
+<p id='t423' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>_logger</span><span class='op'>.</span><span class='nam'>info</span><span class='op'>(</span><span class='str'>&#39;Invalid MAC on client termiante&#39;</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t424' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>return</span><span class='strut'>&nbsp;</span></p>
 <p id='t425' class='pln'><span class='strut'>&nbsp;</span></p>
 <p id='t426' class='pln'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='com'># Verify sequence number</span><span class='strut'>&nbsp;</span></p>
-<p id='t427' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>if</span> <span class='key'>not</span> <span class='nam'>self</span><span class='op'>.</span><span class='nam'>validate_and_update_others_seqnum</span><span class='op'>(</span><span class='nam'>message</span><span class='op'>)</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
-<p id='t428' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>_logger</span><span class='op'>.</span><span class='nam'>info</span><span class='op'>(</span><span class='str'>&#39;Invalid sequence number on client terminate&#39;</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t429' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>return</span><span class='strut'>&nbsp;</span></p>
+<p id='t427' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>if</span> <span class='key'>not</span> <span class='nam'>self</span><span class='op'>.</span><span class='nam'>validate_and_update_others_seqnum</span><span class='op'>(</span><span class='nam'>message</span><span class='op'>)</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
+<p id='t428' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>_logger</span><span class='op'>.</span><span class='nam'>info</span><span class='op'>(</span><span class='str'>&#39;Invalid sequence number on client terminate&#39;</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t429' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class='key'>return</span><span class='strut'>&nbsp;</span></p>
 <p id='t430' class='pln'><span class='strut'>&nbsp;</span></p>
-<p id='t431' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>self</span><span class='op'>.</span><span class='nam'>state</span> <span class='op'>=</span> <span class='nam'>ServerState</span><span class='op'>.</span><span class='nam'>inactive</span><span class='strut'>&nbsp;</span></p>
-<p id='t432' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>msg</span> <span class='op'>=</span> <span class='nam'>six</span><span class='op'>.</span><span class='nam'>int2byte</span><span class='op'>(</span><span class='nam'>Message</span><span class='op'>.</span><span class='nam'>server_terminate</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t433' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>mac</span> <span class='op'>=</span> <span class='nam'>self</span><span class='op'>.</span><span class='nam'>get_mac</span><span class='op'>(</span><span class='nam'>msg</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
-<p id='t434' class='stm run hide_run'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>self</span><span class='op'>.</span><span class='nam'>_send</span><span class='op'>(</span><span class='nam'>msg</span> <span class='op'>+</span> <span class='nam'>mac</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t431' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>self</span><span class='op'>.</span><span class='nam'>state</span> <span class='op'>=</span> <span class='nam'>ServerState</span><span class='op'>.</span><span class='nam'>inactive</span><span class='strut'>&nbsp;</span></p>
+<p id='t432' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>msg</span> <span class='op'>=</span> <span class='nam'>six</span><span class='op'>.</span><span class='nam'>int2byte</span><span class='op'>(</span><span class='nam'>Message</span><span class='op'>.</span><span class='nam'>server_terminate</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t433' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>mac</span> <span class='op'>=</span> <span class='nam'>self</span><span class='op'>.</span><span class='nam'>get_mac</span><span class='op'>(</span><span class='nam'>msg</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
+<p id='t434' class='stm mis'>&nbsp; &nbsp; &nbsp; &nbsp; <span class='nam'>self</span><span class='op'>.</span><span class='nam'>_send</span><span class='op'>(</span><span class='nam'>msg</span> <span class='op'>+</span> <span class='nam'>mac</span><span class='op'>)</span><span class='strut'>&nbsp;</span></p>
 <p id='t435' class='pln'><span class='strut'>&nbsp;</span></p>
 <p id='t436' class='pln'><span class='strut'>&nbsp;</span></p>
 <p id='t437' class='stm run hide_run'>&nbsp; &nbsp; <span class='key'>def</span> <span class='nam'>respond_to_sa_proposal</span><span class='op'>(</span><span class='nam'>self</span><span class='op'>,</span> <span class='nam'>message</span><span class='op'>)</span><span class='op'>:</span><span class='strut'>&nbsp;</span></p>
