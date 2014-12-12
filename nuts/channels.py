@@ -58,6 +58,14 @@ class AuthChannel(object):
         _logger.info('Terminating session with %s...', session.id_a)
         session.terminate()
 
+        # Release any resources held by the channel
+        self.tear_down()
+
+
+    def tear_down(self):
+        """ Release any resources used by the channel, if any. """
+        pass
+
 
     def _send(self, data, address):
         self.send_data(data, address)
@@ -117,6 +125,10 @@ class UDPAuthChannel(AuthChannel):
         data, sender = self.sock.recvfrom(self.mtu)
         _logger.debug('Received data: %s from %s' % (ascii_bin(data), sender))
         return data, sender
+
+
+    def tear_down(self):
+        self.sock.close()
 
 
 class DummyAuthChannel(AuthChannel):
