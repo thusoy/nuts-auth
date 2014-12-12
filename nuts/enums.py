@@ -32,7 +32,7 @@ class Message(IntEnum):
     #: Confirm successful re-key by signing a random nonce with the new key
     rekey_confirm = 0x04
     #: Client is terminating the session.
-    client_terminate = 0x0f
+    client_terminate = 0x7f
 
     # Server messages
 
@@ -47,8 +47,6 @@ class Message(IntEnum):
     #: Complete the re-keying by invalidating all existing sessions
     rekey_completed = 0x84
     #: Version suggested by client is not supported by server.
-    version_not_supported = 0x83
-    #: Message type received from client is not supported by server.
-    message_type_not_supported = 0x84
+    version_not_supported = 0x85
     #: Server is terminating the session.
-    server_terminate = 0x8f
+    server_terminate = 0xff
