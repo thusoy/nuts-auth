@@ -121,7 +121,7 @@ class ClientHelloTest(BaseMessageTestCase):
         for version in [0x20, 0x00, 0xff]:
             msg = b'\x00' + six.int2byte(version) + R_b
             response = self.send_with_mac(msg).msg
-            self.assert_message_type(response, 0x83)
+            self.assert_message_type(response, 0x85)
 
 
 class SAProposalTest(BaseMessageTestCase):
@@ -383,14 +383,14 @@ class RekeyTest(EstablishedSessionTestCase):
 class ClientTerminateTest(EstablishedSessionTestCase):
 
     def test_client_terminate(self):
-        msg = b'\x0f\x00'
+        msg = b'\x7f\x00'
         response = self.send_with_mac(msg).msg
-        self.assert_message_type(response, 0x8f)
+        self.assert_message_type(response, 0xff)
         self.assert_correct_mac(response)
 
 
     def test_client_terminate_invalid_length(self):
-        msg = b'\x0f'
+        msg = b'\x7f'
         response = self.send_with_mac(msg)
         self.assertIsNone(response)
 
@@ -399,13 +399,13 @@ class ClientTerminateTest(EstablishedSessionTestCase):
         first_msg = b'\x02\x03' + b'Hello, world'
         self.send_with_mac(first_msg)
 
-        msg = b'\x0f\x02'
+        msg = b'\x7f\x02'
         response = self.send_with_mac(msg)
         self.assertIsNone(response)
 
 
     def test_client_terminate_invalid_mac(self):
-        msg = b'\x0f\x00' + b'\x00'*self.mac_len
+        msg = b'\x7f\x00' + b'\x00'*self.mac_len
         response = self.get_response(msg)
         self.assertIsNone(response)
 

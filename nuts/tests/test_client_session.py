@@ -292,7 +292,7 @@ class TerminateTest(EstablishedSessionTestCase):
     def test_client_terminate(self):
         self.session.terminate()
         msg = self.channel.sent_messages.pop(0).msg
-        self.assert_message_type(msg, 0x0f)
+        self.assert_message_type(msg, 0x7f)
         self.assertEqual(len(msg), 2 + self.mac_len)
         expected_mac = self.get_mac(msg[:-self.mac_len])
         self.assertEqual(expected_mac, msg[-self.mac_len:])
