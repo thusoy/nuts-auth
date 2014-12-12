@@ -49,6 +49,19 @@ class BaseMessageTestCase(unittest.TestCase):
         self.assertEqual(response[-self.mac_len:], expected_mac)
 
 
+class InvalidMessageTest(BaseMessageTestCase):
+
+    def setUp(self):
+        self.channel = DummyAuthChannel(self.shared_secret)
+
+
+    def test_empty_message(self):
+        # Should not crash
+        self.channel.handle_message(AuthenticatedMessage('source', ''))
+        self.assertEqual(len(self.channel.sent_messages), 0)
+
+
+
 class EstablishedSessionTestCase(BaseMessageTestCase):
     """ Helper TestCase for running tests on an established session. """
 

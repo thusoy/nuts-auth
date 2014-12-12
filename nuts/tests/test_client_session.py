@@ -35,6 +35,18 @@ class BaseTestCase(unittest.TestCase):
             return self.channel.sent_messages.pop(0)
 
 
+class InvalidMessagesTest(BaseTestCase):
+
+    def setUp(self):
+        self.channel = DummyAuthChannel(self.shared_secret)
+        self.session = ClientSession('source', self.channel)
+
+
+    def test_receive_empty_message(self):
+        # Should not fail
+        self.session.handle('')
+
+
 class ClientHelloTest(BaseTestCase):
 
     def setUp(self):

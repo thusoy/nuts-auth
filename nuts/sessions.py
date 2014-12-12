@@ -45,6 +45,8 @@ class Session(object):
         """ Message has been received from sender. It's assumed here that the link layer
         has filtered out messages not intended for us, or that has bit-errors.
         """
+        if not message:
+            return
         msg_type_byte = six.byte2int(message)
         valid_transitions = self.transition_map.get(self.state, [])
         if not msg_type_byte in valid_transitions:
