@@ -103,7 +103,8 @@ class UDPAuthChannel(AuthChannel):
     def __init__(self, *args, **kwargs):
         super(UDPAuthChannel, self).__init__(*args, **kwargs)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.settimeout(2.0)
+        timeout = kwargs.get('timeout', 2.0)
+        self.sock.settimeout(timeout)
 
 
     def listen(self, address):
