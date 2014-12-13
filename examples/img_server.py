@@ -31,7 +31,7 @@ channel = UDPAuthChannel('secret')
 channel.listen( ('10.0.0.1', 8001) )
 while True:
     msg = channel.receive()
-    print msg
+    print('%s said: %s' % (msg.sender, msg))
     img = take_single_picture()
     num_chunks = ceildiv(len(img), msg.session.mtu)
     channel.send(str(num_chunks), msg.sender)
