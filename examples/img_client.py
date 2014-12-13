@@ -18,4 +18,6 @@ with channel.connect( ('10.0.0.1', 8001) ) as session:
         for i in range(num_chunks):
             chunk = session.receive()
             print('got chunk %d of %d' % (i + 1, num_chunks))
-            img_fh.write(chunk)
+            # Preferably, the msg received would support the buffer interface
+            # and be writable directly, but it isn't
+            img_fh.write(chunk.msg)
