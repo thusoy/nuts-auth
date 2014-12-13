@@ -113,9 +113,9 @@ class Session(object):
 
         Throws a NutsInvalidState if the session is not established.
         """
-        if not self.state == ClientState.established:
+        if not self.state in (ClientState.established, ServerState.established):
             raise NutsInvalidState("Session needs to be established to be able"
-                " to send data, call .connect(address) first")
+                " to send data, call .connect(address) first (was %s)" % self.state)
         if self.mtu and len(data) > self.mtu:
             raise NutsMessageTooLarge('Message of %d bytes is too long to be '
                 'sent through this session, maximum size supported is %d '
