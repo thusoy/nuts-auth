@@ -37,6 +37,6 @@ while True:
     channel.send(str(num_chunks), msg.sender)
     for i in range(num_chunks):
         chunk = img[i*msg.session.mtu:(i+1)*msg.session.mtu]
-        print('Sending chunk %d of %d' % (i, num_chunks))
+        print('Sending chunk %d of %d' % (i + 1, num_chunks))
         channel.send(chunk, msg.sender)
         time.sleep(0.1)
