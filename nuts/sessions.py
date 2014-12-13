@@ -309,7 +309,7 @@ class ClientSession(Session):
 
 
     def deliver(self, data):
-        self._messages.append(AuthenticatedMessage(self.id_a, data))
+        self._messages.append(AuthenticatedMessage(self.id_a, data, self))
 
 
     def respond_to_server_terminate(self, message):
@@ -405,7 +405,7 @@ class ServerSession(Session):
 
 
     def deliver(self, message):
-        self.channel._messages.append(AuthenticatedMessage(self.id_b, message))
+        self.channel._messages.append(AuthenticatedMessage(self.id_b, message, self))
 
 
     def respond_to_client_hello(self, message):
