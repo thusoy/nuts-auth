@@ -30,7 +30,7 @@ class AuthChannel(object):
     ]
 
 
-    def __init__(self, shared_key):
+    def __init__(self, shared_key, *args, **kwargs):
         """ Create a new auth channel context to keep around. """
         self.shared_key = shared_key
         self.sessions = {}
