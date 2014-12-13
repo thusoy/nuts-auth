@@ -1,7 +1,13 @@
-from collections import namedtuple
-
 # The main message class that the AuthChannel operate on
-AuthenticatedMessage = namedtuple('Message', ['sender', 'msg'])
+class AuthenticatedMessage(object):
+
+    def __init__(self, sender, msg, session=None):
+        self.sender = sender
+        self.msg = msg
+        self.session = session
+
+    def __str__(self):
+        return self.msg
 
 class NutsError(Exception):
     """ General NUTS-related failure. """
