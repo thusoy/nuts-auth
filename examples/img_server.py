@@ -28,7 +28,7 @@ def ceildiv(dividend, divisor):
 
 
 channel = UDPAuthChannel('secret')
-channel.listen( ('10.0.0.1', 8001) )
+channel.listen( ('', 8001) )
 while True:
     msg = channel.receive()
     print('%s said: %s' % (msg.sender, msg))

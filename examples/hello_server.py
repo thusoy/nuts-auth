@@ -6,7 +6,7 @@
 from nuts import UDPAuthChannel
 
 channel = UDPAuthChannel('secret')
-channel.listen( ('127.0.0.1', 8001) )
+channel.listen( ('', 8001) )
 while True:
     msg = channel.receive()
     print('%s said: %s' % (msg.sender, msg))

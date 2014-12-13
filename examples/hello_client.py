@@ -7,7 +7,7 @@
 from nuts import UDPAuthChannel
 
 channel = UDPAuthChannel('secret')
-with channel.connect( ('127.0.0.1', 8001) ) as session:
+with channel.connect( ('10.0.0.1', 8001) ) as session:
     session.send('Hello, space!')
     msg = session.receive()
     print('%s says: %s' % (msg.sender, msg))
