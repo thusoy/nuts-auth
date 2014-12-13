@@ -9,6 +9,13 @@ class AuthenticatedMessage(object):
     def __str__(self):
         return self.msg
 
+    def __int__(self):
+        return int(self.msg)
+
+    def __float__(self):
+        return float(self.msg)
+
+
 class NutsError(Exception):
     """ General NUTS-related failure. """
 
