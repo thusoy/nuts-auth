@@ -75,17 +75,17 @@ I1
 sg19
 I0
 sg20
-I8
+I13
 sg21
 I0
 sg22
 I0
 sg23
-I0
+I1
 sg24
 I0
 sbssg25
-S'\xb4\x9a\x8cy\xfe\xd1\x1c\x95\xd6\x11\x88\x89\x86\xbe\xe1 '
+S'\xc0&z\x1a\x07\x1423l@I\x0c\xfe\xdd\xbc\x98'
 p33
 ssS'nuts_sessions'
 p34
@@ -119,7 +119,7 @@ I26
 sg24
 I17
 sbssg25
-S'\x9e\xe8\xf1MI\x82\xdbd\xef\xbbu\x86\x1a\x91Yl'
+S"\xd1z'U]L\xe3\xda|\x90A6%\xfe\xfe\x0c"
 p41
 ssS'nuts_enums'
 p42
