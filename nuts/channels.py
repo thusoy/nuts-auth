@@ -34,9 +34,21 @@ class AuthChannel(object):
         """ Create a new auth channel context to keep around. """
         self._path_to_keyfile = path_to_keyfile
         with open(path_to_keyfile, 'rb') as key_fh:
-            self.shared_key = key_fh.read().strip()
+            self._shared_key = key_fh.read().strip()
         self.sessions = {}
         self._messages = []
+
+
+    @property
+    def shared_key(self):
+        return self._shared_key
+
+
+    @shared_key.setter
+    def shared_key(self, value):
+        with open(self._path_to_keyfile, 'wb') as key_fh:
+            key_fh.write(value)
+        self._shared_key = value
 
 
     def receive(self):
@@ -94,8 +106,6 @@ class AuthChannel(object):
             _logger.info('Rekey confirmed, new master key in place, invalidating all existing sessions..')
             self.sessions = {}
             _logger.info('Session invalidated, shared key updated')
-            with open(self._path_to_keyfile, 'wb') as key_fh:
-                key_fh.write(session.shared_key)
             self.shared_key = session.shared_key
 
 
