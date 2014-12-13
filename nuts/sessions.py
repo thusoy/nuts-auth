@@ -542,6 +542,7 @@ class ServerSession(Session):
         # Verify length
         if not len(message) == 34 + self._mac_length:
             _logger.info('Invalid length of rekey')
+            # TODO: Multi-byte asequence numbers should also be allowed
             return
 
         # Verify MAC
