@@ -9,7 +9,7 @@
 
 from nuts import UDPAuthChannel
 
-channel = UDPAuthChannel('secret') # Re-key handling? Load key from file, or mutable struct?
+channel = UDPAuthChannel('secret', timeout=4)
 with channel.connect( ('10.0.0.1', 8001) ) as session:
     session.send('Take pic!')
     msg = session.receive()
