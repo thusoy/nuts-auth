@@ -5,7 +5,7 @@
 
 from nuts import UDPAuthChannel
 
-channel = UDPAuthChannel('secret')
+channel = UDPAuthChannel('keyfile')
 channel.listen( ('', 8001) )
 while True:
     msg = channel.receive()

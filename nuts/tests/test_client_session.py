@@ -7,8 +7,10 @@ from nuts.utils import ascii_bin
 import cbor
 import hashlib
 import sha3
+import os
 import six
 import unittest
+import tempfile
 from nacl.c import crypto_scalarmult
 from nacl.public import PrivateKey
 
@@ -25,6 +27,20 @@ class BaseTestCase(unittest.TestCase):
 
     shared_secret = b'secret'
 
+    def get_keyfile(self):
+        self.keyfile = tempfile.NamedTemporaryFile(delete=False)
+        self.keyfile.write(self.shared_secret)
+        self.keyfile.close()
+        return self.keyfile.name
+
+
+    def tearDown(self):
+        try:
+            os.remove(self.keyfile.name)
+        except OSError:
+            pass
+
+
     def assert_message_type(self, response, expected_type):
         self.assertEqual(six.byte2int(response), expected_type)
 
@@ -38,7 +54,7 @@ class BaseTestCase(unittest.TestCase):
 class InvalidMessagesTest(BaseTestCase):
 
     def setUp(self):
-        self.channel = DummyAuthChannel(self.shared_secret)
+        self.channel = DummyAuthChannel(self.get_keyfile())
         self.session = ClientSession('source', self.channel)
 
 
@@ -54,7 +70,7 @@ class InvalidMessagesTest(BaseTestCase):
 class ClientHelloTest(BaseTestCase):
 
     def setUp(self):
-        self.channel = DummyAuthChannel(self.shared_secret)
+        self.channel = DummyAuthChannel(self.get_keyfile())
         self.session = ClientSession('source', self.channel)
 
 
@@ -70,7 +86,7 @@ class ClientHelloTest(BaseTestCase):
 class ServerHelloTest(BaseTestCase):
 
     def setUp(self):
-        self.channel = DummyAuthChannel(self.shared_secret)
+        self.channel = DummyAuthChannel(self.get_keyfile())
         self.session = ClientSession('source', self.channel)
         self.session.do_client_hello()
         self.R_b = self.channel.sent_messages.pop(0).msg[2:-8]
@@ -101,7 +117,7 @@ class ServerHelloTest(BaseTestCase):
 class SATest(BaseTestCase):
 
     def setUp(self):
-        self.channel = DummyAuthChannel(self.shared_secret)
+        self.channel = DummyAuthChannel(self.get_keyfile())
         self.session = ClientSession('source', self.channel)
         self.session.do_client_hello()
         self.R_b = self.channel.sent_messages.pop(0).msg[2:-8]
@@ -166,7 +182,7 @@ class EstablishedSessionTestCase(BaseTestCase):
 
     def setUp(self):
         print('Starting general setup')
-        self.channel = DummyAuthChannel(self.shared_secret)
+        self.channel = DummyAuthChannel(self.get_keyfile())
         self.session = ClientSession('source', self.channel)
         self.session.do_client_hello()
         R_b = self.channel.sent_messages.pop(0).msg[2:-8]

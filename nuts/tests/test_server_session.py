@@ -1,8 +1,10 @@
 import unittest
+import os
 import hashlib
 import sha3 # pylint: disable=unused-import
 import six
 import cbor
+import tempfile
 from nacl.public import PrivateKey
 from nacl.c import crypto_scalarmult
 
@@ -20,6 +22,20 @@ class BaseMessageTestCase(unittest.TestCase):
 
     def assert_message_type(self, response, expected_type):
         self.assertEqual(six.byte2int(response), expected_type)
+
+
+    def get_keyfile(self):
+        self.keyfile = tempfile.NamedTemporaryFile(delete=False)
+        self.keyfile.write(self.shared_secret)
+        self.keyfile.close()
+        return self.keyfile.name
+
+
+    def tearDown(self):
+        try:
+            os.remove(self.keyfile.name)
+        except OSError:
+            pass
 
 
     def get_mac(self, *args, **kwargs):
@@ -52,7 +68,7 @@ class BaseMessageTestCase(unittest.TestCase):
 class InvalidMessageTest(BaseMessageTestCase):
 
     def setUp(self):
-        self.channel = DummyAuthChannel(self.shared_secret)
+        self.channel = DummyAuthChannel(self.get_keyfile())
 
 
     def test_empty_message(self):
@@ -67,7 +83,7 @@ class EstablishedSessionTestCase(BaseMessageTestCase):
 
 
     def setUp(self):
-        self.channel = DummyAuthChannel(self.shared_secret)
+        self.channel = DummyAuthChannel(self.get_keyfile())
 
         # Put channel in established state
         self.R_b = b'\x00'*8
@@ -83,7 +99,7 @@ class EstablishedSessionTestCase(BaseMessageTestCase):
 class ClientHelloTest(BaseMessageTestCase):
 
     def setUp(self):
-        self.channel = DummyAuthChannel(self.shared_secret)
+        self.channel = DummyAuthChannel(self.get_keyfile())
 
 
     def test_client_hello(self):
@@ -127,7 +143,7 @@ class ClientHelloTest(BaseMessageTestCase):
 class SAProposalTest(BaseMessageTestCase):
 
     def setUp(self):
-        self.channel = DummyAuthChannel(self.shared_secret)
+        self.channel = DummyAuthChannel(self.get_keyfile())
 
         # Send valid client_hello to get channel into correct state
         self.R_b = b'\x00'*8

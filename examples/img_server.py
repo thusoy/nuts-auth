@@ -27,7 +27,7 @@ def ceildiv(dividend, divisor):
     return (dividend + divisor - 1) // divisor
 
 
-channel = UDPAuthChannel('secret')
+channel = UDPAuthChannel('keyfile')
 channel.listen( ('', 8001) )
 while True:
     msg = channel.receive()

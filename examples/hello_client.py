@@ -6,7 +6,7 @@
 
 from nuts import UDPAuthChannel
 
-channel = UDPAuthChannel('secret')
+channel = UDPAuthChannel('keyfile')
 with channel.connect( ('10.0.0.1', 8001) ) as session:
     session.send('Hello, space!')
     msg = session.receive()
