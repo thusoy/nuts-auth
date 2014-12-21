@@ -1,0 +1,32 @@
+\chapter{Conclusions and Future Work}
+\label{chp:conclusions}
+
+\section{Concluding Remarks}\label{sec:conclusions}
+
+The sample implementation ended up being around 1000 lines of code, and thus considered to be a bit too big to be included in the appendices. The complete code can be browsed online, at \url{https://github.com/thusoy/nuts-auth}. It has been successfully tested between two Raspberry Pis communicating over wireless UDP, and the protocol doesn't stumble on lost messages or faulty MACs.
+
+The code is thus ready to be utilized in the TTM4137 Wireless Network Security lab, where students can study it to understand the concepts of secure protocols, and to try to find any implementation bugs or holes in the specification that allows the protocol to be broken.
+
+
+\section{Future Work}\label{sec:future_work}
+
+Since projects like these are never completed, but merely continue evolving, there are a couple of points future projects could look into.
+
+    \subsection{C Implementation}
+
+To run the protocol on resource-constrained hardware like the NUTS satellite, a C implementation needs to be developed. It's not expected to be much faster than the Python implementation as all the heavy cryptographic operations in the Python code is performed by C code already, but the complete C implementation is still needed since operating systems like FreeRTOS doesn't support higher-level languages like Python.
+
+
+    \subsection{Satellite RNG}
+
+The NUTS satellite does not have access to a \acrfull{csprng}, which is a requirement for secure operation of NAP. See \autoref{chp:random-numbers} for a deeper discussion about this issue.
+
+
+    \subsection{Fuzz-testing Final Implementation}
+
+When the C implementation is completed, the entire protocol stack should be fuzz tested to try to iron out errors from malformed input packets. The upper layer protocol could also be tested for malformed messages sent by legitimate users, which could be a result from session hijacking or an error in the sending program.
+
+
+    \subsection{Resistance to Power Analysis}
+
+As we saw in \autoref{chp:failure-modes}, the current specification does not try to evade power analysis against MAC-Keccak, assuming that an attacker with physical access to one of the communicating devices will be capable of extracting the key through some other means anyway. However, if storage space is not at a premium and an application needs resistance to this kind of attack, the protocol can be expanded to accommodate custom key sizes, or perform key expansion of the shared secret to an optimal size before using it as a MAC.

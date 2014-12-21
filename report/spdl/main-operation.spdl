@@ -1,0 +1,59 @@
+hashfunction MAC, KDF;
+usertype SecurityAssociation, Command, SequenceNumber;
+const SAprop, SA: SecurityAssociation;
+const SATseq1, SATseq2, GSseq1, GSseq2: SequenceNumber;
+const CMD, ACK: Command;
+macro Ks = KDF(k(GS, Sat), Ra, Rb);
+
+protocol NUTSAuth (GS,Sat) {
+
+    role GS {
+        var Ra: Nonce;
+        fresh Rb: Nonce;
+
+        # Key exchange and mutual authentication
+        send_1(GS, Sat, Rb, MAC(k(GS, Sat), Rb));
+        recv_2(Sat, GS, Ra, MAC(k(GS, Sat), Ra, Rb));
+        send_3(GS, Sat, SAprop, MAC(k(GS, Sat), SAprop, Ra));
+        recv_4(Sat, GS, SA, MAC(Ks, SA));
+
+        # Send command
+        send_5(GS, Sat, GSseq1, CMD, MAC(Ks, GSseq1, CMD));
+        recv_6(Sat, GS, SATseq1, ACK, MAC(Ks, SATseq1, ACK));
+
+        # Send another command (repeat CMDs for scyther to spot replay attacks)
+        send_7(GS, Sat, GSseq2, CMD, MAC(Ks, GSseq2, CMD));
+        recv_8(Sat, GS, SATseq2, ACK, MAC(Ks, SATseq2, ACK));
+
+        claim(GS, Alive);
+        claim(GS, Secret, Ks);
+        claim(GS, Weakagree);
+        claim(GS, Niagree);
+        claim(GS, Nisynch);
+    };
+
+    role Sat {
+        fresh Ra: Nonce;
+        var Rb: Nonce;
+
+        # Key exchange and mutual authentication
+        recv_1(GS, Sat, Rb, MAC(k(GS, Sat), Rb));
+        send_2(Sat, GS, Ra, MAC(k(GS, Sat), Ra, Rb));
+        recv_3(GS, Sat, SAprop, MAC(k(GS, Sat), SAprop, Ra));
+        send_4(Sat, GS, SA, MAC(Ks, SA));
+
+        # Receive command
+        recv_5(GS, Sat, CMD, MAC(Ks, GSseq1, CMD));
+        send_6(Sat, GS, ACK, MAC(Ks, SATseq1, ACK));
+
+        # Receive second command
+        recv_7(GS, GSseq2, Sat, CMD, MAC(Ks, GSseq2, CMD));
+        send_8(Sat, SATseq2, GS, ACK, MAC(Ks, SATseq2, ACK));
+
+        claim(Sat, Alive);
+        claim(Sat, Secret, Ks);
+        claim(Sat, Weakagree);
+        claim(Sat, Niagree);
+        claim(Sat, Nisynch);
+    };
+}

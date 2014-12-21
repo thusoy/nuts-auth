@@ -1,0 +1,941 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="744.09448819"
+   height="1052.3622047"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.5 r10040"
+   sodipodi:docname="auth-without-seqnums.eps">
+  <defs
+     id="defs4">
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath3550">
+      <rect
+         style="fill:none;stroke:#000000;stroke-width:0.79714054;stroke-linejoin:round;stroke-miterlimit:0.60000002;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+         id="rect3552"
+         width="740.66937"
+         height="354.9715"
+         x="-3.7011566"
+         y="-373.70834" />
+    </clipPath>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.98994949"
+     inkscape:cx="214.57433"
+     inkscape:cy="383.73217"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1680"
+     inkscape:window-height="988"
+     inkscape:window-x="1432"
+     inkscape:window-y="246"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       transform="matrix(1.249275,0,0,1.249275,-86.289974,987.88644)"
+       class="graph"
+       id="graph0"
+       clip-path="url(#clipPath3550)">
+      <title
+         id="title2988">semiState1</title>
+      <polygon
+         id="polygon2990"
+         points="737.433,-1345 737.433,4 -4,4 -4,4 -4,-1345 "
+         style="fill:#ffffff;stroke:none" />
+      <text
+         id="text2992"
+         font-size="14.00"
+         y="-7.8000002"
+         x="366.716"
+         style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">[Id 1] Protocol NUTSAuth, role I, claim type Niagree</text>
+      <!-- r0i0 -->
+      <g
+         class="node"
+         id="node1">
+        <title
+           id="title2995">r0i0</title>
+        <polygon
+           id="polygon2997"
+           points="434.433,-1101.5 703.433,-1101.5 703.433,-1139.5 703.433,-1139.5 434.433,-1139.5 "
+           style="fill:#95ebde;stroke:#000000" />
+        <text
+           id="text2999"
+           font-size="14.00"
+           y="-1124.3"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">send_1 to Alice</text>
+        <text
+           id="text3001"
+           font-size="14.00"
+           y="-1109.3"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">(Rb#1,MAC(k(Bob,Alice),Alice,Bob,Rb#1))</text>
+      </g>
+      <!-- r0i1 -->
+      <g
+         class="node"
+         id="node3">
+        <title
+           id="title3004">r0i1</title>
+        <polygon
+           id="polygon3006"
+           points="418.433,-837 719.433,-837 719.433,-875 719.433,-875 418.433,-875 "
+           style="fill:#95ebde;stroke:#000000" />
+        <text
+           id="text3008"
+           font-size="14.00"
+           y="-859.79999"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">recv_2 from Alice</text>
+        <text
+           id="text3010"
+           font-size="14.00"
+           y="-844.79999"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">(Ra#2,MAC(k(Bob,Alice),Alice,Bob,Rb#1,Ra#2))</text>
+      </g>
+      <!-- r0i0&#45;&gt;r0i1 -->
+      <g
+         class="edge"
+         id="edge2">
+        <title
+           id="title3013">r0i0-&gt;r0i1</title>
+        <path
+           id="path3015"
+           d="m 568.933,-1101.46 c 0,44.87 0,161.746 0,216.011"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000;stroke-width:2" />
+        <polygon
+           id="polygon3017"
+           points="572.433,-885.169 572.433,-885.169 568.933,-875.169 565.433,-885.169 "
+           style="fill:#000000;stroke:#000000;stroke-width:2" />
+      </g>
+      <!-- r2i0 -->
+      <g
+         class="node"
+         id="node11">
+        <title
+           id="title3020">r2i0</title>
+        <polygon
+           id="polygon3022"
+           points="226.433,-985 495.433,-985 495.433,-1023 495.433,-1023 226.433,-1023 "
+           style="fill:#a5b7f0;stroke:#000000" />
+        <text
+           id="text3024"
+           font-size="14.00"
+           y="-1007.8"
+           x="360.93301"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">recv_1 from Bob</text>
+        <text
+           id="text3026"
+           font-size="14.00"
+           y="-992.79999"
+           x="360.93301"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">(Rb#1,MAC(k(Bob,Alice),Alice,Bob,Rb#1))</text>
+      </g>
+      <!-- r0i0&#45;&gt;r2i0 -->
+      <g
+         class="edge"
+         id="edge18">
+        <title
+           id="title3029">r0i0-&gt;r2i0</title>
+        <path
+           id="path3031"
+           d="m 535.974,-1101.36 c -36.057,19.85 -93.937,51.71 -133.18,73.32"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#228b22;stroke-width:2" />
+        <polygon
+           id="polygon3033"
+           points="404.185,-1024.81 404.185,-1024.81 393.737,-1023.06 400.809,-1030.95 "
+           style="fill:#228b22;stroke:#228b22;stroke-width:2" />
+      </g>
+      <!-- s0 -->
+      <g
+         class="node"
+         id="node2">
+        <title
+           id="title3036">s0</title>
+        <polygon
+           id="polygon3038"
+           points="622.433,-1340.5 622.433,-1218.5 515.433,-1218.5 515.433,-1218.5 515.433,-1340.5 "
+           style="fill:#95ebde;stroke:#000000" />
+        <text
+           id="text3040"
+           font-size="14.00"
+           y="-1325.3"
+           x="523.43298"
+           style="font-size:14px;text-anchor:start;font-family:'Times New Roman,serif'">Run #1</text>
+        <text
+           id="text3042"
+           font-size="14.00"
+           y="-1310.3"
+           x="523.43298"
+           style="font-size:14px;text-anchor:start;font-family:'Times New Roman,serif'">Bob in role I</text>
+        <polyline
+           id="polyline3044"
+           points="515.433,-1302.5 622.433,-1302.5 "
+           style="fill:none;stroke:#000000" />
+        <text
+           id="text3046"
+           font-size="14.00"
+           y="-1287.3"
+           x="523.43298"
+           style="font-size:14px;text-anchor:start;font-family:'Times New Roman,serif'">I -&gt; Bob</text>
+        <text
+           id="text3048"
+           font-size="14.00"
+           y="-1272.3"
+           x="523.43298"
+           style="font-size:14px;text-anchor:start;font-family:'Times New Roman,serif'">R -&gt; Alice</text>
+        <polyline
+           id="polyline3050"
+           points="515.433,-1264.5 622.433,-1264.5 "
+           style="fill:none;stroke:#000000" />
+        <text
+           id="text3052"
+           font-size="14.00"
+           y="-1249.3"
+           x="523.43298"
+           style="font-size:14px;text-anchor:start;font-family:'Times New Roman,serif'">Fresh Rb#1</text>
+        <polyline
+           id="polyline3054"
+           points="515.433,-1241.5 622.433,-1241.5 "
+           style="fill:none;stroke:#000000" />
+        <text
+           id="text3056"
+           font-size="14.00"
+           y="-1226.3"
+           x="523.43298"
+           style="font-size:14px;text-anchor:start;font-family:'Times New Roman,serif'">Var Ra -&gt; Ra#2</text>
+      </g>
+      <!-- s0&#45;&gt;r0i0 -->
+      <g
+         class="edge"
+         id="edge1">
+        <title
+           id="title3059">s0-&gt;r0i0</title>
+        <path
+           id="path3061"
+           d="m 568.933,-1218.25 c 0,23.53 0,49.38 0,68.43"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000;stroke-width:2" />
+        <polygon
+           id="polygon3063"
+           points="572.433,-1149.72 572.433,-1149.72 568.933,-1139.72 565.433,-1149.72 "
+           style="fill:#000000;stroke:#000000;stroke-width:2" />
+      </g>
+      <!-- r0i2 -->
+      <g
+         class="node"
+         id="node4">
+        <title
+           id="title3066">r0i2</title>
+        <polygon
+           id="polygon3068"
+           points="404.433,-763 733.433,-763 733.433,-801 733.433,-801 404.433,-801 "
+           style="fill:#95ebde;stroke:#000000" />
+        <text
+           id="text3070"
+           font-size="14.00"
+           y="-785.79999"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">send_3 to Alice</text>
+        <text
+           id="text3072"
+           font-size="14.00"
+           y="-770.79999"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">(SAprop,MAC(k(Bob,Alice),Alice,Bob,Ra#2,SAprop))</text>
+      </g>
+      <!-- r0i1&#45;&gt;r0i2 -->
+      <g
+         class="edge"
+         id="edge3">
+        <title
+           id="title3075">r0i1-&gt;r0i2</title>
+        <path
+           id="path3077"
+           d="m 568.933,-836.831 c 0,7.7 0,16.857 0,25.414"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000;stroke-width:2" />
+        <polygon
+           id="polygon3079"
+           points="572.433,-811.413 572.433,-811.413 568.933,-801.413 565.433,-811.413 "
+           style="fill:#000000;stroke:#000000;stroke-width:2" />
+      </g>
+      <!-- r0i3 -->
+      <g
+         class="node"
+         id="node5">
+        <title
+           id="title3082">r0i3</title>
+        <polygon
+           id="polygon3084"
+           points="413.433,-541 724.433,-541 724.433,-579 724.433,-579 413.433,-579 "
+           style="fill:#95ebde;stroke:#000000" />
+        <text
+           id="text3086"
+           font-size="14.00"
+           y="-563.79999"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">recv_4 from Alice</text>
+        <text
+           id="text3088"
+           font-size="14.00"
+           y="-548.79999"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">(SA,MAC(k(Bob,Alice),Alice,Bob,Ra#2,Rb#1,SA))</text>
+      </g>
+      <!-- r0i2&#45;&gt;r0i3 -->
+      <g
+         class="edge"
+         id="edge4">
+        <title
+           id="title3091">r0i2-&gt;r0i3</title>
+        <path
+           id="path3093"
+           d="m 568.933,-762.996 c 0,38.192 0,127.588 0,173.57"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000;stroke-width:2" />
+        <polygon
+           id="polygon3095"
+           points="572.433,-589.252 572.433,-589.252 568.933,-579.252 565.433,-589.252 "
+           style="fill:#000000;stroke:#000000;stroke-width:2" />
+      </g>
+      <!-- r2i2 -->
+      <g
+         class="node"
+         id="node14">
+        <title
+           id="title3098">r2i2</title>
+        <polygon
+           id="polygon3100"
+           points="196.433,-689 525.433,-689 525.433,-727 525.433,-727 196.433,-727 "
+           style="fill:#a5b7f0;stroke:#000000" />
+        <text
+           id="text3102"
+           font-size="14.00"
+           y="-711.79999"
+           x="360.93301"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">recv_3 from Bob</text>
+        <text
+           id="text3104"
+           font-size="14.00"
+           y="-696.79999"
+           x="360.93301"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">(SAprop,MAC(k(Bob,Alice),Alice,Bob,Ra#2,SAprop))</text>
+      </g>
+      <!-- r0i2&#45;&gt;r2i2 -->
+      <g
+         class="edge"
+         id="edge17">
+        <title
+           id="title3107">r0i2-&gt;r2i2</title>
+        <path
+           id="path3109"
+           d="m 516.714,-762.924 c -28.559,9.885 -64.111,22.192 -94.038,32.551"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#228b22;stroke-width:2" />
+        <polygon
+           id="polygon3111"
+           points="423.767,-727.047 423.767,-727.047 413.173,-727.083 421.478,-733.662 "
+           style="fill:#228b22;stroke:#228b22;stroke-width:2" />
+      </g>
+      <!-- r0i4 -->
+      <g
+         class="node"
+         id="node6">
+        <title
+           id="title3114">r0i4</title>
+        <polygon
+           id="polygon3116"
+           points="411.933,-467 725.933,-467 725.933,-505 725.933,-505 411.933,-505 "
+           style="fill:#95ebde;stroke:#000000" />
+        <text
+           id="text3118"
+           font-size="14.00"
+           y="-489.79999"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">send_5 to Alice</text>
+        <text
+           id="text3120"
+           font-size="14.00"
+           y="-474.79999"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">(CMD,MAC(KDF(k(Bob,Alice),Ra#2,Rb#1),CMD))</text>
+      </g>
+      <!-- r0i3&#45;&gt;r0i4 -->
+      <g
+         class="edge"
+         id="edge5">
+        <title
+           id="title3123">r0i3-&gt;r0i4</title>
+        <path
+           id="path3125"
+           d="m 568.933,-540.831 c 0,7.7 0,16.857 0,25.414"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000;stroke-width:2" />
+        <polygon
+           id="polygon3127"
+           points="572.433,-515.413 572.433,-515.413 568.933,-505.413 565.433,-515.413 "
+           style="fill:#000000;stroke:#000000;stroke-width:2" />
+      </g>
+      <!-- r0i5 -->
+      <g
+         class="node"
+         id="node7">
+        <title
+           id="title3130">r0i5</title>
+        <polygon
+           id="polygon3132"
+           points="413.933,-245 723.933,-245 723.933,-283 723.933,-283 413.933,-283 "
+           style="fill:#95ebde;stroke:#000000" />
+        <text
+           id="text3134"
+           font-size="14.00"
+           y="-267.79999"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">recv_6 from Alice</text>
+        <text
+           id="text3136"
+           font-size="14.00"
+           y="-252.8"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">(ACK,MAC(KDF(k(Bob,Alice),Ra#2,Rb#1),ACK))</text>
+      </g>
+      <!-- r0i4&#45;&gt;r0i5 -->
+      <g
+         class="edge"
+         id="edge6">
+        <title
+           id="title3139">r0i4-&gt;r0i5</title>
+        <path
+           id="path3141"
+           d="m 568.933,-466.996 c 0,38.192 0,127.588 0,173.57"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000;stroke-width:2" />
+        <polygon
+           id="polygon3143"
+           points="572.433,-293.252 572.433,-293.252 568.933,-283.252 565.433,-293.252 "
+           style="fill:#000000;stroke:#000000;stroke-width:2" />
+      </g>
+      <!-- r2i4 -->
+      <g
+         class="node"
+         id="node16">
+        <title
+           id="title3146">r2i4</title>
+        <polygon
+           id="polygon3148"
+           points="203.933,-393 517.933,-393 517.933,-431 517.933,-431 203.933,-431 "
+           style="fill:#a5b7f0;stroke:#000000" />
+        <text
+           id="text3150"
+           font-size="14.00"
+           y="-415.79999"
+           x="360.93301"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">recv_5 from Bob</text>
+        <text
+           id="text3152"
+           font-size="14.00"
+           y="-400.79999"
+           x="360.93301"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">(CMD,MAC(KDF(k(Bob,Alice),Ra#2,Rb#1),CMD))</text>
+      </g>
+      <!-- r0i4&#45;&gt;r2i4 -->
+      <g
+         class="edge"
+         id="edge16">
+        <title
+           id="title3155">r0i4-&gt;r2i4</title>
+        <path
+           id="path3157"
+           d="m 516.714,-466.924 c -28.559,9.885 -64.111,22.192 -94.038,32.551"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#228b22;stroke-width:2" />
+        <polygon
+           id="polygon3159"
+           points="423.767,-431.047 423.767,-431.047 413.173,-431.083 421.478,-437.662 "
+           style="fill:#228b22;stroke:#228b22;stroke-width:2" />
+      </g>
+      <!-- r0i6 -->
+      <g
+         class="node"
+         id="node8">
+        <title
+           id="title3162">r0i6</title>
+        <polygon
+           id="polygon3164"
+           points="411.933,-171 725.933,-171 725.933,-209 725.933,-209 411.933,-209 "
+           style="fill:#95ebde;stroke:#000000" />
+        <text
+           id="text3166"
+           font-size="14.00"
+           y="-193.8"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">send_7 to Alice</text>
+        <text
+           id="text3168"
+           font-size="14.00"
+           y="-178.8"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">(CMD,MAC(KDF(k(Bob,Alice),Ra#2,Rb#1),CMD))</text>
+      </g>
+      <!-- r0i5&#45;&gt;r0i6 -->
+      <g
+         class="edge"
+         id="edge7">
+        <title
+           id="title3171">r0i5-&gt;r0i6</title>
+        <path
+           id="path3173"
+           d="m 568.933,-244.831 c 0,7.7 0,16.857 0,25.414"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000;stroke-width:2" />
+        <polygon
+           id="polygon3175"
+           points="572.433,-219.413 572.433,-219.413 568.933,-209.413 565.433,-219.413 "
+           style="fill:#000000;stroke:#000000;stroke-width:2" />
+      </g>
+      <!-- r0i7 -->
+      <g
+         class="node"
+         id="node9">
+        <title
+           id="title3178">r0i7</title>
+        <polygon
+           id="polygon3180"
+           points="413.933,-97 723.933,-97 723.933,-135 723.933,-135 413.933,-135 "
+           style="fill:#95ebde;stroke:#000000" />
+        <text
+           id="text3182"
+           font-size="14.00"
+           y="-119.8"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">recv_8 from Alice</text>
+        <text
+           id="text3184"
+           font-size="14.00"
+           y="-104.8"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">(ACK,MAC(KDF(k(Bob,Alice),Ra#2,Rb#1),ACK))</text>
+      </g>
+      <!-- r0i6&#45;&gt;r0i7 -->
+      <g
+         class="edge"
+         id="edge8">
+        <title
+           id="title3187">r0i6-&gt;r0i7</title>
+        <path
+           id="path3189"
+           d="m 568.933,-170.831 c 0,7.7 0,16.857 0,25.414"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000;stroke-width:2" />
+        <polygon
+           id="polygon3191"
+           points="572.433,-145.413 572.433,-145.413 568.933,-135.413 565.433,-145.413 "
+           style="fill:#000000;stroke:#000000;stroke-width:2" />
+      </g>
+      <!-- r0i11 -->
+      <g
+         class="node"
+         id="node10">
+        <title
+           id="title3194">r0i11</title>
+        <polygon
+           id="polygon3196"
+           points="536.433,-23 601.433,-23 601.433,-61 601.433,-61 536.433,-61 "
+           style="fill:#000000;stroke:#000000" />
+        <text
+           id="text3198"
+           font-size="14.00"
+           y="-45.799999"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;fill:#ffffff;font-family:'Times New Roman,serif'">claim_I4</text>
+        <text
+           id="text3200"
+           font-size="14.00"
+           y="-30.799999"
+           x="568.93298"
+           style="font-size:14px;text-anchor:middle;fill:#ffffff;font-family:'Times New Roman,serif'">Niagree</text>
+      </g>
+      <!-- r0i7&#45;&gt;r0i11 -->
+      <g
+         class="edge"
+         id="edge9">
+        <title
+           id="title3203">r0i7-&gt;r0i11</title>
+        <path
+           id="path3205"
+           d="m 568.933,-96.8314 c 0,7.7004 0,16.8571 0,25.4148"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000;stroke-width:2" />
+        <polygon
+           id="polygon3207"
+           points="572.433,-71.4132 572.433,-71.4132 568.933,-61.4133 565.433,-71.4133 "
+           style="fill:#000000;stroke:#000000;stroke-width:2" />
+      </g>
+      <!-- r2i1 -->
+      <g
+         class="node"
+         id="node13">
+        <title
+           id="title3210">r2i1</title>
+        <polygon
+           id="polygon3212"
+           points="210.433,-911 511.433,-911 511.433,-949 511.433,-949 210.433,-949 "
+           style="fill:#a5b7f0;stroke:#000000" />
+        <text
+           id="text3214"
+           font-size="14.00"
+           y="-933.79999"
+           x="360.93301"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">send_2 to Bob</text>
+        <text
+           id="text3216"
+           font-size="14.00"
+           y="-918.79999"
+           x="360.93301"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">(Ra#2,MAC(k(Bob,Alice),Alice,Bob,Rb#1,Ra#2))</text>
+      </g>
+      <!-- r2i0&#45;&gt;r2i1 -->
+      <g
+         class="edge"
+         id="edge11">
+        <title
+           id="title3219">r2i0-&gt;r2i1</title>
+        <path
+           id="path3221"
+           d="m 360.933,-984.831 c 0,7.7 0,16.857 0,25.414"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000;stroke-width:2" />
+        <polygon
+           id="polygon3223"
+           points="364.433,-959.413 364.433,-959.413 360.933,-949.413 357.433,-959.413 "
+           style="fill:#000000;stroke:#000000;stroke-width:2" />
+      </g>
+      <!-- s2 -->
+      <g
+         class="node"
+         id="node12">
+        <title
+           id="title3226">s2</title>
+        <polygon
+           id="polygon3228"
+           points="415.933,-1181.5 415.933,-1059.5 305.933,-1059.5 305.933,-1059.5 305.933,-1181.5 "
+           style="fill:#a5b7f0;stroke:#000000" />
+        <text
+           id="text3230"
+           font-size="14.00"
+           y="-1166.3"
+           x="313.93301"
+           style="font-size:14px;text-anchor:start;font-family:'Times New Roman,serif'">Run #2</text>
+        <text
+           id="text3232"
+           font-size="14.00"
+           y="-1151.3"
+           x="313.93301"
+           style="font-size:14px;text-anchor:start;font-family:'Times New Roman,serif'">Alice in role R</text>
+        <polyline
+           id="polyline3234"
+           points="305.933,-1143.5 415.933,-1143.5 "
+           style="fill:none;stroke:#000000" />
+        <text
+           id="text3236"
+           font-size="14.00"
+           y="-1128.3"
+           x="313.93301"
+           style="font-size:14px;text-anchor:start;font-family:'Times New Roman,serif'">I -&gt; Bob</text>
+        <text
+           id="text3238"
+           font-size="14.00"
+           y="-1113.3"
+           x="313.93301"
+           style="font-size:14px;text-anchor:start;font-family:'Times New Roman,serif'">R -&gt; Alice</text>
+        <polyline
+           id="polyline3240"
+           points="305.933,-1105.5 415.933,-1105.5 "
+           style="fill:none;stroke:#000000" />
+        <text
+           id="text3242"
+           font-size="14.00"
+           y="-1090.3"
+           x="313.93301"
+           style="font-size:14px;text-anchor:start;font-family:'Times New Roman,serif'">Fresh Ra#2</text>
+        <polyline
+           id="polyline3244"
+           points="305.933,-1082.5 415.933,-1082.5 "
+           style="fill:none;stroke:#000000" />
+        <text
+           id="text3246"
+           font-size="14.00"
+           y="-1067.3"
+           x="313.93301"
+           style="font-size:14px;text-anchor:start;font-family:'Times New Roman,serif'">Var Rb -&gt; Rb#1</text>
+      </g>
+      <!-- s2&#45;&gt;r2i0 -->
+      <g
+         class="edge"
+         id="edge10">
+        <title
+           id="title3249">s2-&gt;r2i0</title>
+        <path
+           id="path3251"
+           d="m 360.933,-1059.23 c 0,9.04 0,17.97 0,25.9"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000;stroke-width:2" />
+        <polygon
+           id="polygon3253"
+           points="364.433,-1033.22 364.433,-1033.22 360.933,-1023.22 357.433,-1033.22 "
+           style="fill:#000000;stroke:#000000;stroke-width:2" />
+      </g>
+      <!-- r2i1&#45;&gt;r0i1 -->
+      <g
+         class="edge"
+         id="edge23">
+        <title
+           id="title3256">r2i1-&gt;r0i1</title>
+        <path
+           id="path3258"
+           d="m 413.151,-910.924 c 28.559,9.885 64.111,22.192 94.038,32.551"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#228b22;stroke-width:2" />
+        <polygon
+           id="polygon3260"
+           points="508.387,-881.662 508.387,-881.662 516.692,-875.083 506.098,-875.047 "
+           style="fill:#228b22;stroke:#228b22;stroke-width:2" />
+      </g>
+      <!-- r2i1&#45;&gt;r2i2 -->
+      <g
+         class="edge"
+         id="edge12">
+        <title
+           id="title3263">r2i1-&gt;r2i2</title>
+        <path
+           id="path3265"
+           d="m 360.933,-910.996 c 0,38.192 0,127.588 0,173.57"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000;stroke-width:2" />
+        <polygon
+           id="polygon3267"
+           points="364.433,-737.252 364.433,-737.252 360.933,-727.252 357.433,-737.252 "
+           style="fill:#000000;stroke:#000000;stroke-width:2" />
+      </g>
+      <!-- r2i3 -->
+      <g
+         class="node"
+         id="node15">
+        <title
+           id="title3270">r2i3</title>
+        <polygon
+           id="polygon3272"
+           points="205.433,-615 516.433,-615 516.433,-653 516.433,-653 205.433,-653 "
+           style="fill:#a5b7f0;stroke:#000000" />
+        <text
+           id="text3274"
+           font-size="14.00"
+           y="-637.79999"
+           x="360.93301"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">send_4 to Bob</text>
+        <text
+           id="text3276"
+           font-size="14.00"
+           y="-622.79999"
+           x="360.93301"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">(SA,MAC(k(Bob,Alice),Alice,Bob,Ra#2,Rb#1,SA))</text>
+      </g>
+      <!-- r2i2&#45;&gt;r2i3 -->
+      <g
+         class="edge"
+         id="edge13">
+        <title
+           id="title3279">r2i2-&gt;r2i3</title>
+        <path
+           id="path3281"
+           d="m 360.933,-688.831 c 0,7.7 0,16.857 0,25.414"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000;stroke-width:2" />
+        <polygon
+           id="polygon3283"
+           points="364.433,-663.413 364.433,-663.413 360.933,-653.413 357.433,-663.413 "
+           style="fill:#000000;stroke:#000000;stroke-width:2" />
+      </g>
+      <!-- r2i3&#45;&gt;r0i3 -->
+      <g
+         class="edge"
+         id="edge22">
+        <title
+           id="title3286">r2i3-&gt;r0i3</title>
+        <path
+           id="path3288"
+           d="m 413.151,-614.924 c 28.559,9.885 64.111,22.192 94.038,32.551"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#228b22;stroke-width:2" />
+        <polygon
+           id="polygon3290"
+           points="508.387,-585.662 508.387,-585.662 516.692,-579.083 506.098,-579.047 "
+           style="fill:#228b22;stroke:#228b22;stroke-width:2" />
+      </g>
+      <!-- r2i3&#45;&gt;r2i4 -->
+      <g
+         class="edge"
+         id="edge14">
+        <title
+           id="title3293">r2i3-&gt;r2i4</title>
+        <path
+           id="path3295"
+           d="m 360.933,-614.996 c 0,38.192 0,127.588 0,173.57"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000;stroke-width:2" />
+        <polygon
+           id="polygon3297"
+           points="364.433,-441.252 364.433,-441.252 360.933,-431.252 357.433,-441.252 "
+           style="fill:#000000;stroke:#000000;stroke-width:2" />
+      </g>
+      <!-- r2i5 -->
+      <g
+         class="node"
+         id="node17">
+        <title
+           id="title3300">r2i5</title>
+        <polygon
+           id="polygon3302"
+           points="205.933,-319 515.933,-319 515.933,-357 515.933,-357 205.933,-357 "
+           style="fill:#a5b7f0;stroke:#000000" />
+        <text
+           id="text3304"
+           font-size="14.00"
+           y="-341.79999"
+           x="360.93301"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">send_6 to Bob</text>
+        <text
+           id="text3306"
+           font-size="14.00"
+           y="-326.79999"
+           x="360.93301"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">(ACK,MAC(KDF(k(Bob,Alice),Ra#2,Rb#1),ACK))</text>
+      </g>
+      <!-- r2i4&#45;&gt;r2i5 -->
+      <g
+         class="edge"
+         id="edge15">
+        <title
+           id="title3309">r2i4-&gt;r2i5</title>
+        <path
+           id="path3311"
+           d="m 360.933,-392.831 c 0,7.7 0,16.857 0,25.414"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000;stroke-width:2" />
+        <polygon
+           id="polygon3313"
+           points="364.433,-367.413 364.433,-367.413 360.933,-357.413 357.433,-367.413 "
+           style="fill:#000000;stroke:#000000;stroke-width:2" />
+      </g>
+      <!-- r2i5&#45;&gt;r0i5 -->
+      <g
+         class="edge"
+         id="edge21">
+        <title
+           id="title3316">r2i5-&gt;r0i5</title>
+        <path
+           id="path3318"
+           d="m 413.151,-318.924 c 28.559,9.885 64.111,22.192 94.038,32.551"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#228b22;stroke-width:2" />
+        <polygon
+           id="polygon3320"
+           points="508.387,-289.662 508.387,-289.662 516.692,-283.083 506.098,-283.047 "
+           style="fill:#228b22;stroke:#228b22;stroke-width:2" />
+      </g>
+      <!-- redir_r2i5r0i7 -->
+      <g
+         class="node"
+         id="node18">
+        <title
+           id="title3323">redir_r2i5r0i7</title>
+        <ellipse
+           id="ellipse3325"
+           ry="18"
+           rx="196.86501"
+           cy="-190"
+           cx="196.933"
+           sodipodi:cx="196.933"
+           sodipodi:cy="-190"
+           sodipodi:rx="196.86501"
+           sodipodi:ry="18"
+           style="fill:#f68555;stroke:#000000"
+           d="m 393.798,-190 c 0,9.94113 -88.13946,18 -196.865,18 -108.725542,0 -196.86500684,-8.05887 -196.86500684,-18 0,-9.94113 88.13946484,-18 196.86500684,-18 108.72554,0 196.865,8.05887 196.865,18 z" />
+        <text
+           id="text3327"
+           font-size="14.00"
+           y="-186.3"
+           x="196.933"
+           style="font-size:14px;text-anchor:middle;font-family:'Times New Roman,serif'">select MAC(KDF(k(Bob,Alice),Ra#2,Rb#1),ACK)</text>
+      </g>
+      <!-- r2i5&#45;&gt;redir_r2i5r0i7 -->
+      <g
+         class="edge"
+         id="edge19">
+        <title
+           id="title3330">r2i5-&gt;redir_r2i5r0i7</title>
+        <path
+           id="path3332"
+           d="m 340.493,-318.804 c -29.446,26.214 -83.852,74.649 -116.571,103.777"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000" />
+        <polygon
+           id="polygon3334"
+           points="225.895,-212.098 225.895,-212.098 216.099,-208.063 221.241,-217.326 "
+           style="fill:#000000;stroke:#000000" />
+      </g>
+      <!-- redir_r2i5r0i7&#45;&gt;r0i7 -->
+      <g
+         class="edge"
+         id="edge20">
+        <title
+           id="title3337">redir_r2i5r0i7-&gt;r0i7</title>
+        <path
+           id="path3339"
+           d="m 277.193,-173.466 c 55.121,10.669 128.795,24.928 188.314,36.448"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000" />
+        <polygon
+           id="polygon3341"
+           points="466.536,-140.384 466.536,-140.384 475.688,-135.047 465.206,-133.511 "
+           style="fill:#000000;stroke:#000000" />
+      </g>
+    </g>
+  </g>
+</svg>

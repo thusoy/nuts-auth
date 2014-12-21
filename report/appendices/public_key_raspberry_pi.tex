@@ -1,0 +1,18 @@
+\chapter{Performance of Public Key Cryptography on the Raspberry Pi}\label{chp:public-key-raspberry-pi}
+
+The following table sums up the time it takes to perform various public key cryptographic operations on a stock Raspberry Pi with no overclocking, utilizing \texttt{libsodium} and Curve25519, as exposed through the \texttt{pynacl} package. The time of signing operations as a function of message size will grow as fast as the SHA-512 computation of the message, since all of the public key operations only work on the SHA-512 digest of the message.
+
+Since the Raspberry Pi is not a real-time system, numbers are presented as percentiles of the observed execution times. A real-time system would display a fixed, deterministic time for the deterministic computations, such as signing and verification.
+
+\begin{table}[H]
+\caption{Performance overview of Curve25519 operations on the Raspberry Pi. All numbers are the 95th percentile of running 100 consecutive operations over 100 repeated runs, divided by 100 to get the time of a single operation}\label{tab:public-key-crypto}
+\centering
+    \begin{tabular}{| r | r |}
+    \hline
+    \textbf{Operation} & \textbf{95th percentile} \\ \hline
+    Key generation & \( 3.11 ms \) \\ \hline
+    Sign message & \( 3.32 ms \) \\ \hline
+    Verify message signature & \( 6.08 ms \) \\ \hline
+    Compute session key & \( 4.96 ms \) \\ \hline
+    \end{tabular}
+\end{table}

@@ -1,0 +1,13 @@
+\chapter{NAP Main Operation SPDL}\label{chp:nuts-spdl}
+
+Here we include the \gls{spdl} used to formally verify the security properties of NAP.
+
+First, we demonstrate a model of the protocol without sequence numbers, to make sure Scyther finds the replay attack vector, as seen below.
+
+\lstinputlisting[caption=SPDL of NAP Without Sequence Numbers, label=lst:no-sequence-numbers]{spdl/no-sequence-numbers.spdl}
+
+Scyther correctly detected the attack, as was shown in \autoref{fig:scyther-replay-attack}.
+
+We know add sequence numbers to the model, to mitigate the replay attacks, and we end up with the model depicted below.
+
+\lstinputlisting[caption=SPDL of NAP With Replay Attack Protection, label=lst:final-spdl]{spdl/main-operation.spdl}

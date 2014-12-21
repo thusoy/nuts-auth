@@ -1,0 +1,679 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="744.09448819"
+   height="1052.3622047"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.5 r10040"
+   sodipodi:docname="protocol-packet-flow.eps">
+  <defs
+     id="defs4">
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lend-4-1-67"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         id="path3804-0-5-87"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lend-4-1-5"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         id="path3804-0-5-5"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lend-4-0"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         id="path3804-0-2"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lend-4-1-3"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         id="path3804-0-5-8"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lend-4-1-6"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         id="path3804-0-5-6"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lend-8"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         id="path3804-3"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lend-4-1"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         id="path3804-0-5"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lend-4"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         id="path3804-0"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       style="overflow:visible;"
+       id="Arrow1Lend"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend">
+      <path
+         transform="scale(0.8) rotate(180) translate(12.5,0)"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         id="path3804" />
+    </marker>
+    <marker
+       style="overflow:visible;"
+       id="Arrow1Mend"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mend">
+      <path
+         transform="scale(0.4) rotate(180) translate(10,0)"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         id="path3810" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow2Lstart"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="Arrow2Lstart">
+      <path
+         transform="scale(1.1) translate(1,0)"
+         d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "
+         style="fill-rule:evenodd;stroke-width:0.62500000;stroke-linejoin:round"
+         id="path3819" />
+    </marker>
+    <marker
+       inkscape:stockid="DistanceStart"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="DistanceStart"
+       style="overflow:visible">
+      <g
+         id="g2300">
+        <path
+           id="path2306"
+           d="M 0,0 L 2,0"
+           style="fill:none;stroke:#ffffff;stroke-width:1.15;stroke-linecap:square" />
+        <path
+           id="path2302"
+           d="M 0,0 L 13,4 L 9,0 13,-4 L 0,0 z "
+           style="fill:#000000;fill-rule:evenodd;stroke:none" />
+        <path
+           id="path2304"
+           d="M 0,-4 L 0,40"
+           style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:square" />
+      </g>
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="SquareL"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="SquareL">
+      <path
+         transform="scale(0.8)"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt"
+         d="M -5.0,-5.0 L -5.0,5.0 L 5.0,5.0 L 5.0,-5.0 L -5.0,-5.0 z "
+         id="path3871" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Tail"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="Tail">
+      <g
+         transform="scale(-1.2)"
+         id="g3837">
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round"
+           d="M -3.8048674,-3.9585227 L 0.54352094,0"
+           id="path3839" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round"
+           d="M -1.2866832,-3.9585227 L 3.0617053,0"
+           id="path3841" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round"
+           d="M 1.3053582,-3.9585227 L 5.6537466,0"
+           id="path3843" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round"
+           d="M -3.8048674,4.1775838 L 0.54352094,0.21974226"
+           id="path3845" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round"
+           d="M -1.2866832,4.1775838 L 3.0617053,0.21974226"
+           id="path3847" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round"
+           d="M 1.3053582,4.1775838 L 5.6537466,0.21974226"
+           id="path3849" />
+      </g>
+    </marker>
+    <marker
+       style="overflow:visible;"
+       id="Arrow2Lend"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="Arrow2Lend">
+      <path
+         transform="scale(1.1) rotate(180) translate(1,0)"
+         d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "
+         style="fill-rule:evenodd;stroke-width:0.62500000;stroke-linejoin:round;"
+         id="path3822" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.979899"
+     inkscape:cx="424.45188"
+     inkscape:cy="325.46599"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1-9"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1018"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="layer1-948"
+       inkscape:label="Layer 1"
+       transform="translate(80.540026,282.85714)">
+      <g
+         transform="translate(-5.714286,-23.772656)"
+         inkscape:label="Layer 1"
+         id="layer1-94">
+        <g
+           id="layer1-9"
+           inkscape:label="Layer 1"
+           transform="translate(81.320571,169.59523)">
+          <rect
+             y="117.29858"
+             x="-31.823635"
+             height="41.583389"
+             width="143.99144"
+             id="rect2987"
+             style="fill:none;stroke:#000000;stroke-width:0.74721396px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+          <path
+             inkscape:connector-curvature="0"
+             id="path3007"
+             d="m 38.517007,158.2613 0,422.9071"
+             style="fill:none;stroke:#000000;stroke-width:1.10836327px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+          <path
+             inkscape:connector-curvature="0"
+             id="path3027"
+             d="m 38.332217,205.07112 313.990613,0"
+             style="fill:none;stroke:#000000;stroke-width:1.04021883;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Lend)" />
+          <path
+             inkscape:connector-curvature="0"
+             id="path3027-9"
+             d="m 38.332217,308.32993 314.997703,0"
+             style="fill:none;stroke:#000000;stroke-width:1.04188573;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Lend)" />
+          <text
+             sodipodi:linespacing="125%"
+             id="text4265"
+             y="199.12344"
+             x="96.96656"
+             style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Adobe Devanagari;-inkscape-font-specification:Adobe Devanagari Bold"
+             xml:space="preserve"><tspan
+               id="tspan4269"
+               style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro Bold"
+               y="199.12344"
+               x="96.96656"
+               sodipodi:role="line">CLIENT_HELLO(R<tspan
+   id="tspan4275"
+   style="font-size:65.00091553%;baseline-shift:sub">b</tspan>, MAC<tspan
+   id="tspan4273"
+   style="font-size:65.00091553%;baseline-shift:sub">K</tspan>(R<tspan
+   id="tspan4277"
+   style="font-size:65.00091553%;baseline-shift:sub">b</tspan>))</tspan></text>
+          <path
+             inkscape:connector-curvature="0"
+             id="path4279"
+             d="m 354.52789,258.95789 -314.365803,0"
+             style="fill:none;stroke:#000000;stroke-width:1.03864408;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:0.60000002;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker-start:none;marker-mid:none;marker-end:url(#Arrow1Lend-4)" />
+          <text
+             sodipodi:linespacing="125%"
+             id="text4265-4"
+             y="251.24481"
+             x="85.041039"
+             style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Adobe Devanagari;-inkscape-font-specification:Adobe Devanagari Bold"
+             xml:space="preserve"><tspan
+               id="tspan4269-8"
+               style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro Bold"
+               y="251.24481"
+               x="85.041039"
+               sodipodi:role="line">SERVER_HELLO(R<tspan
+   id="tspan4495"
+   style="font-size:65.00091553%;baseline-shift:sub">a</tspan>, MAC<tspan
+   id="tspan4273-2"
+   style="font-size:65.00091553%;baseline-shift:sub">K</tspan>(R<tspan
+   id="tspan4515"
+   style="font-size:65.00091553%;baseline-shift:sub">a</tspan>|| R<tspan
+   id="tspan4517"
+   style="font-size:65.00091553%;baseline-shift:sub">b</tspan>))</tspan></text>
+          <text
+             sodipodi:linespacing="125%"
+             id="text4265-5"
+             y="301.83951"
+             x="83.29818"
+             style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Adobe Devanagari;-inkscape-font-specification:Adobe Devanagari Bold"
+             xml:space="preserve"><tspan
+               id="tspan4269-5"
+               style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro Bold"
+               y="301.83951"
+               x="83.29818"
+               sodipodi:role="line">SA_PROPOSAL(SA, MAC<tspan
+   id="tspan4273-7"
+   style="font-size:65.00091553%;baseline-shift:sub">K</tspan>(SA || R<tspan
+   style="font-size:65%;baseline-shift:sub"
+   id="tspan3329">a</tspan>))</tspan></text>
+          <path
+             inkscape:connector-curvature="0"
+             id="path4279-2"
+             d="m 354.05875,359.22907 -314.356913,0"
+             style="fill:none;stroke:#000000;stroke-width:1.03862941;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Lend-4)" />
+          <text
+             sodipodi:linespacing="125%"
+             id="text4265-4-7"
+             y="353.56726"
+             x="141.66391"
+             style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Adobe Devanagari;-inkscape-font-specification:Adobe Devanagari Bold"
+             xml:space="preserve"><tspan
+               id="tspan4269-8-6"
+               style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro Bold"
+               y="353.56726"
+               x="141.66391"
+               sodipodi:role="line">SA(SA, MAC<tspan
+   id="tspan4606"
+   style="font-size:65.00091553%;baseline-shift:sub">S</tspan>(SA))</tspan></text>
+          <text
+             sodipodi:linespacing="125%"
+             id="text4265-5-8-2"
+             y="335.00723"
+             x="-105.20933"
+             style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Adobe Devanagari;-inkscape-font-specification:Adobe Devanagari Bold"
+             xml:space="preserve"><tspan
+               id="tspan4269-5-8-1"
+               style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro Bold"
+               y="335.00723"
+               x="-105.20933"
+               sodipodi:role="line">S=KDF(K || R<tspan
+   id="tspan9498-4"
+   style="font-size:65.00091553%;baseline-shift:sub">a</tspan> || R<tspan
+   id="tspan9496-9"
+   style="font-size:65.00091553%;baseline-shift:sub">b</tspan>)</tspan></text>
+          <path
+             inkscape:connector-curvature="0"
+             id="path9527"
+             d="m 38.332217,316.68982 -21.65081,0 0,29.25786 21.06565,0"
+             style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow1Lend-4-1)" />
+          <text
+             sodipodi:linespacing="125%"
+             id="text4265-8"
+             y="140.94528"
+             x="-5.6725879"
+             style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Adobe Devanagari;-inkscape-font-specification:Adobe Devanagari Bold"
+             xml:space="preserve"><tspan
+               id="tspan4269-2"
+               style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro Bold"
+               y="140.94528"
+               x="-5.6725879"
+               sodipodi:role="line">Ground station</tspan></text>
+          <path
+             inkscape:connector-curvature="0"
+             id="path3027-9-8"
+             d="m 37.892557,448.34637 315.586383,0"
+             style="fill:none;stroke:#000000;stroke-width:1.04285884;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Lend)" />
+          <text
+             sodipodi:linespacing="125%"
+             id="text4265-5-6"
+             y="443.37119"
+             x="64.319534"
+             style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Adobe Devanagari;-inkscape-font-specification:Adobe Devanagari Bold"
+             xml:space="preserve"><tspan
+               id="tspan4269-5-9"
+               style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro Bold"
+               y="443.37119"
+               x="64.319534"
+               sodipodi:role="line">CLIENT_DATA(N<tspan
+   id="tspan10080"
+   style="font-size:65.00091553%;baseline-shift:sub">c</tspan>, data, MAC<tspan
+   id="tspan4273-7-8"
+   style="font-size:65.00091553%;baseline-shift:sub">S</tspan>(N<tspan
+   id="tspan10082"
+   style="font-size:65.00091553%;baseline-shift:sub">c</tspan> || data))</tspan></text>
+          <path
+             sodipodi:nodetypes="cccc"
+             inkscape:connector-curvature="0"
+             id="path8234-2"
+             d="m 38.261577,376.79183 26.1485,0 0,30.42816 -23.73687,0"
+             style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Lend-4-1)" />
+          <text
+             sodipodi:linespacing="125%"
+             id="text4265-5-6-6"
+             y="396.64261"
+             x="162.86954"
+             style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Adobe Devanagari;-inkscape-font-specification:Adobe Devanagari Bold"
+             xml:space="preserve"><tspan
+               id="tspan4269-5-9-2"
+               style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro Bold"
+               y="396.64261"
+               x="162.86954"
+               sodipodi:role="line">N<tspan
+   id="tspan10078"
+   style="font-size:65.00091553%;baseline-shift:sub">s</tspan> = N<tspan
+   id="tspan10076"
+   style="font-size:65.00091553%;baseline-shift:sub">c</tspan> = 1</tspan><tspan
+               id="tspan9892"
+               style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro Bold"
+               y="414.14261"
+               x="162.86954"
+               sodipodi:role="line" /></text>
+          <text
+             sodipodi:linespacing="125%"
+             id="text4265-5-6-6-5"
+             y="540.65906"
+             x="13.847813"
+             style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro"
+             xml:space="preserve"><tspan
+               id="tspan4269-5-9-2-7"
+               style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro"
+               y="540.65906"
+               x="13.847813"
+               sodipodi:role="line">Verify(Ñ<tspan
+   id="tspan10092"
+   style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;baseline-shift:sub;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro">s</tspan> &gt;= N<tspan
+   id="tspan10094"
+   style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;baseline-shift:sub;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro">s</tspan>)</tspan><tspan
+               id="tspan10090"
+               style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro"
+               y="558.15906"
+               x="13.847813"
+               sodipodi:role="line">N<tspan
+   id="tspan10096"
+   style="font-size:65.00091553%;baseline-shift:sub">s</tspan> = Ñ<tspan
+   style="font-size:65%;baseline-shift:sub"
+   id="tspan3327">s</tspan></tspan><tspan
+               id="tspan10098"
+               style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro"
+               y="575.65906"
+               x="13.847813"
+               sodipodi:role="line" /><tspan
+               id="tspan9892-8"
+               style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro"
+               y="593.15906"
+               x="13.847813"
+               sodipodi:role="line" /></text>
+          <path
+             inkscape:connector-curvature="0"
+             id="path4279-2-0"
+             d="m 354.84358,526.37466 -315.071083,0"
+             style="fill:none;stroke:#000000;stroke-width:1.03980851;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow1Lend-4)" />
+          <text
+             sodipodi:linespacing="125%"
+             id="text4265-5-6-8"
+             y="520.42841"
+             x="55.206989"
+             style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Adobe Devanagari;-inkscape-font-specification:Adobe Devanagari Bold"
+             xml:space="preserve"><tspan
+               id="tspan4269-5-9-9"
+               style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro Bold"
+               y="520.42841"
+               x="55.206989"
+               sodipodi:role="line">SERVER_DATA(N<tspan
+   id="tspan10084"
+   style="font-size:65.00091553%;baseline-shift:sub">s</tspan>, data, MAC<tspan
+   id="tspan4273-7-8-2"
+   style="font-size:65.00091553%;baseline-shift:sub">S</tspan>(N<tspan
+   id="tspan10086"
+   style="font-size:65.00091553%;baseline-shift:sub">s</tspan> || data))</tspan></text>
+          <g
+             id="g3233"
+             transform="translate(-156.85714,-12.857143)">
+            <rect
+               style="fill:none;stroke:#000000;stroke-width:0.74721396px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+               id="rect2987-1"
+               width="143.99144"
+               height="41.583389"
+               x="439.01636"
+               y="130.15572" />
+            <path
+               style="fill:none;stroke:#000000;stroke-width:1.10836327px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+               d="m 511.83964,172.13504 0,422.90709"
+               id="path3007-7"
+               inkscape:connector-curvature="0" />
+            <path
+               style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Lend-4-1)"
+               d="m 511.42724,328.96181 26.1485,0 0,30.42816 -24.97818,0"
+               id="path8234"
+               inkscape:connector-curvature="0"
+               sodipodi:nodetypes="cccc" />
+            <text
+               xml:space="preserve"
+               style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Adobe Devanagari;-inkscape-font-specification:Adobe Devanagari Bold"
+               x="548.10602"
+               y="349.61984"
+               id="text4265-5-8"
+               sodipodi:linespacing="125%"><tspan
+                 sodipodi:role="line"
+                 x="548.10602"
+                 y="349.61984"
+                 style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro Bold"
+                 id="tspan4269-5-8">S=KDF(K || R<tspan
+   style="font-size:65.00091553%;baseline-shift:sub"
+   id="tspan9498">a</tspan> || R<tspan
+   style="font-size:65.00091553%;baseline-shift:sub"
+   id="tspan9496">b</tspan>)</tspan></text>
+            <text
+               xml:space="preserve"
+               style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Adobe Devanagari;-inkscape-font-specification:Adobe Devanagari Bold"
+               x="497.60211"
+               y="153.58521"
+               id="text4265-8-9"
+               sodipodi:linespacing="125%"><tspan
+                 sodipodi:role="line"
+                 x="497.60211"
+                 y="153.58521"
+                 style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro Bold"
+                 id="tspan4269-2-9">Server</tspan></text>
+            <path
+               style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow1Lend-4-1)"
+               d="m 511.83022,390.23412 -21.65081,0 0,29.25786 19.82434,0"
+               id="path9527-2"
+               inkscape:connector-curvature="0"
+               sodipodi:nodetypes="cccc" />
+            <text
+               xml:space="preserve"
+               style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Adobe Devanagari;-inkscape-font-specification:Adobe Devanagari Bold"
+               x="540.08545"
+               y="476.27545"
+               id="text4265-5-6-6-5-2"
+               sodipodi:linespacing="125%"><tspan
+                 sodipodi:role="line"
+                 x="540.08545"
+                 y="476.27545"
+                 style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro Bold"
+                 id="tspan9942">Verify(Ñ<tspan
+   style="font-size:65.00091553%;baseline-shift:sub"
+   id="tspan3323">c</tspan> &gt;= N<tspan
+   style="font-size:65.00091553%;baseline-shift:sub"
+   id="tspan3321">c</tspan>)</tspan><tspan
+                 sodipodi:role="line"
+                 x="540.08545"
+                 y="493.77545"
+                 style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro Bold"
+                 id="tspan10042">N<tspan
+   style="font-size:65.00091553%;baseline-shift:sub"
+   id="tspan10050">c</tspan> = Ñ<tspan
+   style="font-size:65%;baseline-shift:sub"
+   id="tspan3325">c</tspan></tspan><tspan
+                 sodipodi:role="line"
+                 x="540.08545"
+                 y="511.27545"
+                 style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro Bold"
+                 id="tspan9892-8-8" /></text>
+            <text
+               xml:space="preserve"
+               style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Adobe Devanagari;-inkscape-font-specification:Adobe Devanagari Bold"
+               x="516.9718"
+               y="532.8894"
+               id="text4265-5-6-6-5-2-8"
+               sodipodi:linespacing="125%"><tspan
+                 sodipodi:role="line"
+                 x="516.9718"
+                 y="532.8894"
+                 style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro Bold"
+                 id="tspan9942-2">N<tspan
+   style="font-size:65.00091553%;baseline-shift:sub"
+   id="tspan10088">s</tspan> += 1</tspan><tspan
+                 sodipodi:role="line"
+                 x="516.9718"
+                 y="550.3894"
+                 style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro Bold"
+                 id="tspan9892-8-8-0" /></text>
+            <path
+               style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Lend-4-1)"
+               d="m 511.9579,465.05887 26.1485,0 0,30.42816 -24.97818,0"
+               id="path8234-27"
+               inkscape:connector-curvature="0"
+               sodipodi:nodetypes="cccc" />
+          </g>
+          <path
+             sodipodi:nodetypes="cccc"
+             inkscape:connector-curvature="0"
+             id="path9527-8"
+             d="m 38.574597,529.88132 -21.65081,0 0,34.34525 19.7209,0.41377"
+             style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow1Lend-4-1)" />
+          <text
+             sodipodi:linespacing="125%"
+             id="text4265-5-6-6-5-8"
+             y="448.15509"
+             x="24.41584"
+             style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro"
+             xml:space="preserve"><tspan
+               id="tspan9892-8-1"
+               style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Adobe Garamond Pro;-inkscape-font-specification:Adobe Garamond Pro"
+               y="448.15509"
+               x="24.41584"
+               sodipodi:role="line">N<tspan
+   style="font-size:65%;baseline-shift:sub"
+   id="tspan3317">c</tspan> += 1</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

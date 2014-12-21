@@ -1,0 +1,10 @@
+\pagestyle{empty}
+\begin{abstract}
+
+This project demonstrates \gls{nap}, a new two-way authenticated communications protocol suitable for open networks, such as open Wi-Fi networks or ham radio links, originally intended for usage in the \gls{nuts} CubeSat project. Due to legal restrictions on ham radio links about encoding data, the protocol is intended for applications which need authentication and source integrity, but not confidentiality.
+
+The protocol is based on pre-shared keys and \glspl{mac}, and establishes sessions with sequence numbers to defeat replay attacks. The protocol contains a feature to re-negotiate long-term keys in case they're compromised.
+
+The protocol is verified through scyther, a utility to verify formal security properties of protocols. Potential risks, implementation details and failure modes are discussed, and a sample implementation can be found at \url{https://github.com/thusoy/nuts-auth}. Example usage of the implementation for both the client and server is provided in this paper.
+
+\end{abstract}
